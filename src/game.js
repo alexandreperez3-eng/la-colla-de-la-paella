@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03A.1
+ LA COLLA DE LA PAELLA · PASO 03B
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -19,13 +19,20 @@
   const specialStatus = document.querySelector('#special-status');
   const comboLabel = document.querySelector('#combo');
   const debugHitboxes = document.querySelector('#debug-hitboxes');
+  const animationLabel = document.querySelector('#animation-label');
+  const idleImage = new Image();
+  idleImage.src = 'assets/llaurador_idle.png?v=03b';
+  // No dibujamos una imagen hasta que esté cargada: si falla, queda Canvas como respaldo.
+  const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448;
+  const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: el personaje solo está en UNO de estos tres estados.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
   const game = {
     player:{
       x:0,y:0,facing:1,walking:0,state:STATE.IDLE,stateTime:0,
-      impactDone:false,attackStep:1,comboQueued:false,specialCooldown:0
+      impactDone:false,attackStep:1,comboQueued:false,specialCooldown:0,
+      animationTime:0,lastAnimationState:STATE.IDLE
     },
     enemy:{x:config.ladron.x,y:config.ladron.y,hp:config.ladron.vida,flash:0},
     collected:false,
@@ -43,6 +50,8 @@
     game.player.attackStep = 1;
     game.player.comboQueued = false;
     game.player.specialCooldown = 0;
+    game.player.animationTime = 0;
+    game.player.lastAnimationState = STATE.IDLE;
     game.enemy.x = config.ladron.x;
     game.enemy.y = config.ladron.y;
     game.enemy.hp = config.ladron.vida;
@@ -55,6 +64,7 @@
     comboLabel.textContent = 'Combo: —';
     specialStatus.textContent = 'REMOLÍ';
     specialButton.disabled = false;
+    animationLabel.textContent = 'Sprite: IDLE 1/4';
   }
 
   speedInput.value = config.personaje.velocidad;
@@ -207,6 +217,18 @@
         status.textContent='¡Victoria! Has completado el entrenamiento de las corbelles.';
       }
     }
+    // El estado determina la secuencia; el tiempo determina el frame.
+    if(p.state!==p.lastAnimationState){
+      p.animationTime=0;
+      p.lastAnimationState=p.state;
+    }else{
+      p.animationTime+=delta;
+    }
+    const currentFrame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
+    animationLabel.textContent=p.state===STATE.IDLE
+      ? 'Sprite: IDLE '+(currentFrame+1)+'/4'
+      : 'Sprite: '+p.state+' (provisional)';
+
     coordinates.textContent=`Posición: ${Math.round(p.x)}, ${Math.round(p.y)}`;
     stateLabel.textContent='Estado: '+p.state+(p.state===STATE.ATTACK?' '+p.attackStep:'');
     comboLabel.textContent=p.state===STATE.ATTACK ?
@@ -298,6 +320,26 @@
 
   function drawPlayer(){
     const p=game.player;
+
+    // Paso 03B: solamente IDLE usa el primer spritesheet real.
+    // WALK, ATTACK y SPECIAL seguirán con dibujos Canvas hasta generar sus hojas.
+    if(p.state===STATE.IDLE && idleSpriteReady()){
+      const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.scale(p.facing,1);
+      // La posición se mide desde los pies: por eso usamos altura negativa.
+      ctx.drawImage(
+        idleImage,
+        frame*IDLE_SPRITE.ancho,0,
+        IDLE_SPRITE.ancho,IDLE_SPRITE.alto,
+        -64,-148,128,148
+      );
+      ctx.restore();
+      ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
+      ctx.fillText('LLAURADOR',p.x,p.y-159);
+      return;
+    }
     const {x,y,facing,walking,state}=p;
     const walk=state===STATE.WALK;
     const step=walk?Math.sin(walking)*7:0;
