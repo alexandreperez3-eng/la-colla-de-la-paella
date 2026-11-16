@@ -10,3 +10,19 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;ma
 .attack-button:active{transform:translateY(3px);box-shadow:0 1px 0 #682d24;background:#d76f42}
 #state{color:#edc77f}
 @media(max-width:600px){.attack-button{flex-basis:58px;height:58px;font-size:20px;border-width:2px}.attack-button span{font-size:8px}}
+
+/* Paso 03A: dos técnicas táctiles sin sacrificar el control direccional */
+.action-buttons{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.attack-button{flex:0 0 72px;width:72px;height:72px;box-shadow:0 4px 0 #682d24}
+.special-button{background:#377982;border-color:#aee3d7;box-shadow:0 4px 0 #22535c}
+.special-button:active{background:#5eaba7;box-shadow:0 1px 0 #22535c}
+.special-button:disabled{filter:grayscale(.72);opacity:.7;cursor:not-allowed}
+#combo{color:#edc77f}
+@media(max-width:650px){
+  .controls{flex-wrap:wrap;justify-content:space-between}
+  .action-buttons{gap:5px}
+  .attack-button{flex-basis:57px;width:57px;height:57px}
+  .lesson{max-width:none;width:100%;flex:1 1 100%;order:3}
+  .pad{order:1}.action-buttons{order:2}
+  .hint{display:none}
+}
