@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const sandbox={window:{}};
+vm.runInNewContext(fs.readFileSync('src/animation.js','utf8'),sandbox);
+const {frame}=sandbox.window.Animacion;
+assert.equal(frame(0,6,4),0,'empieza en fotograma cero');
+assert.equal(frame(0.18,6,4),1,'avanza según el reloj');
+assert.equal(frame(0.50,6,4),3,'cuarto fotograma');
+assert.equal(frame(0.67,6,4),0,'repite en bucle');
+assert.equal(frame(-1,6,4),0,'tiempo negativo seguro');
+assert.equal(frame(1,0,4),0,'fps cero seguro');
+console.log('6 comprobaciones de animación superadas.');
