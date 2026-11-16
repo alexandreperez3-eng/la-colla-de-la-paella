@@ -10,12 +10,12 @@ window.CONFIG = {
   },
   limites: {izquierda: 30, derecha: 870, arriba: 284, abajo: 444},
   arroz: {x: 745, y: 369, radioRecogida: 53},
-  ladron: {x: 530, y: 365, vida: 6},
+  ladron: {x: 530, y: 365, vida: 6, semiancho: 22, semiprofundidad: 14},
   ataque: {
     primero: {duracion: 0.34, impacto: 0.14, dano: 1},
     segundo: {duracion: 0.43, impacto: 0.20, dano: 2},
-    alcance: 94,
-    profundidad: 40
+    alcance: 116, // alcance frontal desde el origen del jugador
+    profundidad: 38 // margen en carril Y; la hurtbox del enemigo añade su semiprofundidad
   },
   especial: {
     duracion: 0.75,
