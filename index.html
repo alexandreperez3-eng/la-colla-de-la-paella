@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#143b3b" />
+  <title>La Colla de la Paella · Paso 01</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="game-shell">
+  <header>
+    <div><small>LA COLLA DE LA PAELLA</small><h1>Camí de l'Horta <span>· PASO 01</span></h1></div>
+    <div class="goal" id="objective">🎯 Acércate al saco de arroz</div>
+  </header>
+  <div class="stage"><canvas id="game" width="900" height="480" aria-label="Escenario del juego: llaurador en l'Horta"></canvas></div>
+  <section class="controls" aria-label="Controles del juego">
+    <div class="pad" aria-label="Movimiento táctil">
+      <span></span><button data-move="up" aria-label="Arriba">▲</button><span></span>
+      <button data-move="left" aria-label="Izquierda">◀</button><button data-move="down" aria-label="Abajo">▼</button><button data-move="right" aria-label="Derecha">▶</button>
+    </div>
+    <div class="lesson">
+      <label for="speed">Velocidad del llaurador: <output id="speed-value">210</output> px/s</label>
+      <input id="speed" type="range" min="100" max="420" step="10" value="210" />
+      <div class="hint">Cambia el valor y nota cómo responde. En PC: flechas o WASD.</div>
+      <button class="reset" id="reset">↺ Volver a empezar</button>
+    </div>
+  </section>
+  <footer><span id="coordinates">Posición: 120, 365</span><span id="status">Camina en dos dimensiones y recupera el arroz.</span></footer>
+</main>
+<script src="src/config.js" defer></script>
+<script src="src/game.js" defer></script>
+</body>
+</html>
