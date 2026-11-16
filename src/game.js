@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03A
+ LA COLLA DE LA PAELLA · PASO 03A.1
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -18,6 +18,7 @@
   const specialButton = document.querySelector('#special');
   const specialStatus = document.querySelector('#special-status');
   const comboLabel = document.querySelector('#combo');
+  const debugHitboxes = document.querySelector('#debug-hitboxes');
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: el personaje solo está en UNO de estos tres estados.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -139,7 +140,8 @@
       (p.attackStep===1 ? config.ataque.primero : config.ataque.segundo);
     const acierta=especial ?
       Combat.circular(p,e,config.especial.radio) :
-      Combat.frontal(p,e,config.ataque.alcance,config.ataque.profundidad);
+      Combat.frontal(p,e,config.ataque.alcance,config.ataque.profundidad,
+        config.ladron.semiancho,config.ladron.semiprofundidad);
     if(acierta){
       e.hp=Math.max(0,e.hp-tecnica.dano);
       e.flash=0.18;
@@ -366,10 +368,44 @@
     ctx.fillText('LLAURADOR',x,y-159);
   }
 
+  // Visualizamos sobre el torso la geometría que usa el combate.
+  // El desplazamiento vertical -70 es únicamente visual; en lógica
+  // las dos cajas se calculan sobre la posición de los pies.
+  function drawHitboxes() {
+    const p=game.player, e=game.enemy, a=config.ataque, l=config.ladron;
+    const xInicio=p.facing>0?p.x-12:p.x-a.alcance;
+    const ancho=a.alcance+12;
+    const yCentro=p.y-70;
+    ctx.save();
+    ctx.setLineDash([7,5]);
+    ctx.fillStyle='rgba(245,199,77,.18)';
+    ctx.fillRect(xInicio,yCentro-a.profundidad,ancho,2*a.profundidad);
+    ctx.strokeStyle='#ffe077';
+    ctx.lineWidth=2;
+    ctx.strokeRect(xInicio,yCentro-a.profundidad,ancho,2*a.profundidad);
+    if(e.hp>0){
+      ctx.fillStyle='rgba(242,85,109,.16)';
+      ctx.fillRect(e.x-l.semiancho,e.y-70-l.semiprofundidad,2*l.semiancho,2*l.semiprofundidad);
+      ctx.strokeStyle='#f65e80';
+      ctx.strokeRect(e.x-l.semiancho,e.y-70-l.semiprofundidad,2*l.semiancho,2*l.semiprofundidad);
+    }
+    if(p.state===STATE.SPECIAL){
+      ctx.strokeStyle='#4ef1ed';
+      ctx.beginPath();ctx.arc(p.x,p.y-70,config.especial.radio,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.font='bold 12px system-ui';
+    ctx.textAlign='left';
+    ctx.fillStyle='#574014';
+    ctx.fillText('HITBOX',xInicio,yCentro-a.profundidad-8);
+    ctx.restore();
+  }
+
   function render(){
     background();drawRice();
     // Renderizamos primero al personaje más alejado (eje Y).
     if(game.enemy.y<game.player.y){drawEnemy();drawPlayer();}else{drawPlayer();drawEnemy();}
+    if(debugHitboxes.checked)drawHitboxes();
     if(game.collected){
       ctx.fillStyle='#183d36dd';ctx.fillRect(235,150,430,125);
       ctx.textAlign='center';ctx.fillStyle='#f8dc95';ctx.font='bold 31px system-ui';
