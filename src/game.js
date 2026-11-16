@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 02
+ LA COLLA DE LA PAELLA · PASO 03A
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -15,11 +15,17 @@
   const objective = document.querySelector('#objective');
   const stateLabel = document.querySelector('#state');
   const attackButton = document.querySelector('#attack');
+  const specialButton = document.querySelector('#special');
+  const specialStatus = document.querySelector('#special-status');
+  const comboLabel = document.querySelector('#combo');
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: el personaje solo está en UNO de estos tres estados.
-  const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK'});
+  const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
   const game = {
-    player:{x:0,y:0,facing:1,walking:0,state:STATE.IDLE,stateTime:0,impactDone:false},
+    player:{
+      x:0,y:0,facing:1,walking:0,state:STATE.IDLE,stateTime:0,
+      impactDone:false,attackStep:1,comboQueued:false,specialCooldown:0
+    },
     enemy:{x:config.ladron.x,y:config.ladron.y,hp:config.ladron.vida,flash:0},
     collected:false,
     elapsed:0
@@ -33,13 +39,21 @@
     game.player.state = STATE.IDLE;
     game.player.stateTime = 0;
     game.player.impactDone = false;
+    game.player.attackStep = 1;
+    game.player.comboQueued = false;
+    game.player.specialCooldown = 0;
+    game.enemy.x = config.ladron.x;
+    game.enemy.y = config.ladron.y;
     game.enemy.hp = config.ladron.vida;
     game.enemy.flash = 0;
     game.collected = false;
     game.elapsed = 0;
-    objective.textContent = '⚔️ Derrota al ladrón (3 golpes)';
-    status.textContent = 'Acércate, mira hacia el ladrón y usa GOLPEAR.';
+    objective.textContent = '⚔️ Derrota al ladrón de entrenamiento';
+    status.textContent = 'Acércate, mira hacia él y encadena dos golpes.';
     stateLabel.textContent = 'Estado: IDLE';
+    comboLabel.textContent = 'Combo: —';
+    specialStatus.textContent = 'REMOLÍ';
+    specialButton.disabled = false;
   }
 
   speedInput.value = config.personaje.velocidad;
@@ -47,24 +61,46 @@
   speedInput.addEventListener('input',()=>{speedValue.textContent=speedInput.value;});
   document.querySelector('#reset').addEventListener('click',reset);
 
+  // El segundo toque durante ATTACK 1 encola el segundo tajo.
   function startAttack() {
-    const p = game.player;
-    if(game.collected || p.state === STATE.ATTACK) return;
-    p.state = STATE.ATTACK;
-    p.stateTime = 0;
-    p.impactDone = false;
-    status.textContent = '¡Aixada en marcha!';
+    const p=game.player;
+    if(game.collected || p.state===STATE.SPECIAL || game.enemy.hp===0)return;
+    if(p.state===STATE.ATTACK){
+      if(p.attackStep===1 && !p.comboQueued){
+        p.comboQueued=true;
+        status.textContent='¡Segundo tajo preparado!';
+      }
+      return;
+    }
+    p.state=STATE.ATTACK;
+    p.stateTime=0;
+    p.impactDone=false;
+    p.attackStep=1;
+    p.comboQueued=false;
+    status.textContent='¡Primer tajo!';
   }
 
-  // El botón usa pointerdown para reaccionar al tocar, sin esperar al clic.
-  attackButton.addEventListener('pointerdown',event=>{
-    event.preventDefault();
-    startAttack();
-  });
-  attackButton.addEventListener('click',event=>{
-    // Activación con teclado/accesibilidad sin duplicar el toque.
-    if(event.detail === 0) startAttack();
-  });
+  // La técnica circular no necesita mirar hacia el enemigo.
+  function startSpecial() {
+    const p=game.player;
+    if(game.collected || game.enemy.hp===0 || p.specialCooldown>0 ||
+       p.state===STATE.ATTACK || p.state===STATE.SPECIAL)return;
+    p.state=STATE.SPECIAL;
+    p.stateTime=0;
+    p.impactDone=false;
+    p.specialCooldown=config.especial.recarga;
+    status.textContent='¡REMOLÍ DE CORBELLES!';
+  }
+
+  function bindAction(button,action){
+    button.addEventListener('pointerdown',event=>{
+      event.preventDefault();action();
+    });
+    // detail=0: pulsación desde teclado/tecnologías asistivas.
+    button.addEventListener('click',event=>{if(event.detail===0)action();});
+  }
+  bindAction(attackButton,startAttack);
+  bindAction(specialButton,startSpecial);
 
   document.querySelectorAll('[data-move]').forEach(button => {
     const direction = button.dataset.move;
@@ -87,61 +123,92 @@
     if((event.key==='j' || event.key===' ') && !event.repeat){
       startAttack();event.preventDefault();
     }
+    if(event.key==='k' && !event.repeat){
+      startSpecial();event.preventDefault();
+    }
   });
   window.addEventListener('keyup',event=>{const d=keyMap[event.key];if(d)keys[d]=false;});
   window.addEventListener('blur',()=>Object.keys(keys).forEach(d=>keys[d]=false));
 
-  // Un ataque dura varios frames. Solo golpeamos en el instante de impacto.
-  function update(delta) {
-    const p=game.player, e=game.enemy, a=config.ataque;
-    game.elapsed += delta;
-    if(e.flash > 0)e.flash=Math.max(0,e.flash-delta);
-    if(game.collected)return;
+  // Los golpes no hacen daño en cada frame: solo al cruzar su instante de impacto.
+  function aplicarImpacto() {
+    const p=game.player,e=game.enemy;
+    if(e.hp<=0)return;
+    const especial=p.state===STATE.SPECIAL;
+    const tecnica=especial ? config.especial :
+      (p.attackStep===1 ? config.ataque.primero : config.ataque.segundo);
+    const acierta=especial ?
+      Combat.circular(p,e,config.especial.radio) :
+      Combat.frontal(p,e,config.ataque.alcance,config.ataque.profundidad);
+    if(acierta){
+      e.hp=Math.max(0,e.hp-tecnica.dano);
+      e.flash=0.18;
+      status.textContent=e.hp>0
+        ? '¡Impacto! Al ladrón le quedan '+e.hp+' PV.'
+        : '¡Ladrón derrotado! Ahora recupera el arroz.';
+      if(e.hp===0)objective.textContent='🌾 Recoge el saco de arroz';
+    }else{
+      status.textContent='Fallaste: revisa orientación, distancia y profundidad.';
+    }
+  }
 
-    if(p.state===STATE.ATTACK){
-      p.stateTime += delta;
-      if(!p.impactDone && p.stateTime>=a.instanteImpacto){
-        p.impactDone=true; // una única comprobación de daño por ataque
-        const frontal=(e.x-p.x)*p.facing;
-        const sameLane=Math.abs(e.y-p.y)<=a.profundidad;
-        if(e.hp>0 && frontal>=-12 && frontal<=a.alcance && sameLane){
-          e.hp--;
-          e.flash=0.2;
-          status.textContent=e.hp>0 ? '¡Impacto! Al ladrón le quedan '+e.hp+' vidas.' : '¡Ladrón derrotado! Ahora recupera el arroz.';
-          if(e.hp===0)objective.textContent='🌾 Recoge el saco de arroz';
-        }else if(e.hp>0){
-          status.textContent='Golpe fallido: acércate y mira hacia el ladrón.';
+  function update(delta) {
+    const p=game.player,e=game.enemy;
+    game.elapsed+=delta;
+    e.flash=Math.max(0,e.flash-delta);
+    p.specialCooldown=Math.max(0,p.specialCooldown-delta);
+    specialStatus.textContent=p.specialCooldown>0 ?
+      Math.ceil(p.specialCooldown)+' s' : 'REMOLÍ';
+    specialButton.disabled=p.specialCooldown>0 || p.state===STATE.ATTACK ||
+      p.state===STATE.SPECIAL || game.collected;
+
+    if(!game.collected){
+      if(p.state===STATE.ATTACK || p.state===STATE.SPECIAL){
+        p.stateTime+=delta;
+        const tecnica=p.state===STATE.SPECIAL ? config.especial :
+          (p.attackStep===1 ? config.ataque.primero : config.ataque.segundo);
+        if(!p.impactDone && p.stateTime>=tecnica.impacto){
+          p.impactDone=true;
+          aplicarImpacto();
+        }
+        if(p.stateTime>=tecnica.duracion){
+          if(p.state===STATE.ATTACK && p.attackStep===1 && p.comboQueued){
+            p.attackStep=2;
+            p.comboQueued=false;
+            p.impactDone=false;
+            p.stateTime=0;
+            status.textContent='¡Segundo tajo con la otra corbella!';
+          }else{
+            p.state=STATE.IDLE;
+            p.stateTime=0;
+          }
+        }
+      }else{
+        let dx=Number(keys.right)-Number(keys.left);
+        let dy=Number(keys.down)-Number(keys.up);
+        if(dx!==0 || dy!==0){
+          const length=Math.hypot(dx,dy);
+          dx/=length;dy/=length;
+          const speed=Number(speedInput.value);
+          p.x=clamp(p.x+dx*speed*delta,config.limites.izquierda,config.limites.derecha);
+          p.y=clamp(p.y+dy*speed*.72*delta,config.limites.arriba,config.limites.abajo);
+          if(dx)p.facing=Math.sign(dx);
+          p.state=STATE.WALK;
+          p.walking+=15*delta;
+        }else{
+          p.state=STATE.IDLE;
         }
       }
-      if(p.stateTime>=a.duracion){
-        p.state=STATE.IDLE;
-        p.stateTime=0;
+      if(e.hp===0 && Math.hypot(p.x-config.arroz.x,p.y-config.arroz.y)<config.arroz.radioRecogida){
+        game.collected=true;
+        objective.textContent='✅ ¡ARRÒS RECUPERAT!';
+        status.textContent='¡Victoria! Has completado el entrenamiento de las corbelles.';
       }
-    }else{
-      let dx=Number(keys.right)-Number(keys.left);
-      let dy=Number(keys.down)-Number(keys.up);
-      if(dx!==0 || dy!==0){
-        const length=Math.hypot(dx,dy);
-        dx/=length;dy/=length;
-        const speed=Number(speedInput.value);
-        p.x=clamp(p.x+dx*speed*delta,config.limites.izquierda,config.limites.derecha);
-        p.y=clamp(p.y+dy*speed*.72*delta,config.limites.arriba,config.limites.abajo);
-        if(dx)p.facing=Math.sign(dx);
-        p.state=STATE.WALK;
-        p.walking+=15*delta;
-      }else{
-        p.state=STATE.IDLE;
-      }
-    }
-
-    // La recompensa no se puede recoger mientras siga vivo el ladrón.
-    if(e.hp===0 && Math.hypot(p.x-config.arroz.x,p.y-config.arroz.y)<config.arroz.radioRecogida){
-      game.collected=true;
-      objective.textContent='✅ ¡ARRÒS RECUPERAT!';
-      status.textContent='¡Ganaste! Has aprendido estados, ataque y colisiones.';
     }
     coordinates.textContent=`Posición: ${Math.round(p.x)}, ${Math.round(p.y)}`;
-    stateLabel.textContent='Estado: '+p.state;
+    stateLabel.textContent='Estado: '+p.state+(p.state===STATE.ATTACK?' '+p.attackStep:'');
+    comboLabel.textContent=p.state===STATE.ATTACK ?
+      (p.comboQueued?'Combo: 2.º en cola':'Combo: '+p.attackStep+'/2'):'Combo: —';
   }
 
   const rect=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
@@ -204,44 +271,99 @@
     ctx.fillText('LLADRE',x,y-167);
   }
 
+  // Dibujo provisional: una corbella por mano (mango + hoja curva).
+  // El arte definitivo será un spritesheet, no código geométrico.
+  function drawCorbella(hx,hy,angle,sentido) {
+    ctx.save();
+    ctx.translate(hx,hy);
+    ctx.rotate(angle);
+    ctx.strokeStyle='#885a35';
+    ctx.lineWidth=6;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,12);ctx.lineTo(0,-27);ctx.stroke();
+    ctx.strokeStyle='#d9e5e1';ctx.lineWidth=7;
+    ctx.beginPath();
+    ctx.moveTo(0,-27);
+    ctx.quadraticCurveTo(sentido*29,-60,sentido*30,-15);
+    ctx.stroke();
+    ctx.strokeStyle='#647d80';ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(0,-27);
+    ctx.quadraticCurveTo(sentido*29,-60,sentido*30,-15);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawPlayer(){
     const p=game.player;
     const {x,y,facing,walking,state}=p;
-    const walkingNow=state===STATE.WALK;
-    const swing=walkingNow ? Math.sin(walking)*6 : 0;
-    const idleBob=state===STATE.IDLE ? Math.sin(game.elapsed*3)*1.5 : 0;
-    const attackProgress=state===STATE.ATTACK ? Math.min(p.stateTime/config.ataque.duracion,1) : 0;
-    const lean=state===STATE.ATTACK ? Math.sin(attackProgress*Math.PI)*facing*9 : 0;
+    const walk=state===STATE.WALK;
+    const step=walk?Math.sin(walking)*7:0;
+    const breath=state===STATE.IDLE?Math.sin(game.elapsed*4)*2:0;
+    const active=state===STATE.ATTACK || state===STATE.SPECIAL;
+    const cfg=state===STATE.SPECIAL?config.especial:
+      (p.attackStep===1?config.ataque.primero:config.ataque.segundo);
+    const phase=active?Math.min(p.stateTime/cfg.duracion,1):0;
+    const bend=active?Math.sin(phase*Math.PI)*6:0;
 
-    ellipse(x,y,25,8,'#59472f66');
-    rect(x-14,y-24+swing,12,26,'#3f5362');
-    rect(x+3,y-24-swing,12,26,'#3f5362');
-    rect(x-22+lean,y-83+idleBob,44,61,'#6f9855');
-    ellipse(x+lean,y-95+idleBob,23,23,'#e6bd8d');
-    rect(x-27+lean,y-120+idleBob,54,12,'#b18c57');
-    rect(x-19+lean,y-136+idleBob,38,18,'#b18c57');
-    ctx.textAlign='center';ctx.font='28px system-ui';ctx.fillStyle='#28423e';
-    ctx.fillText('•ᴗ•',x+lean,y-90+idleBob);
-
-    // Dibujamos la aixada como dos líneas: mango y cabeza metálica.
+    ellipse(x,y,31,9,'#59472f66');
     ctx.save();
-    ctx.translate(x+facing*24,y-48);
-    const angle=state===STATE.ATTACK ? (-1.2+attackProgress*2.1)*facing : -.15*facing;
-    ctx.rotate(angle);
-    ctx.strokeStyle='#855d35';ctx.lineWidth=7;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(0,24);ctx.lineTo(0,-38);ctx.stroke();
-    ctx.strokeStyle='#9eb2ad';ctx.lineWidth=10;
-    ctx.beginPath();ctx.moveTo(-18,-38);ctx.lineTo(15,-38);ctx.stroke();
-    ctx.restore();
+    ctx.translate(x,y);
+    ctx.scale(facing,1); // la silueta completa gira mirando a la izquierda
+
+    // Piernas flexionadas y espardenyes: centro de gravedad bajo.
+    ctx.strokeStyle='#405467';ctx.lineWidth=12;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-8,-47);ctx.lineTo(-26,-22-step);ctx.lineTo(-17,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(10,-47);ctx.lineTo(34,-25+step);ctx.lineTo(38,0);ctx.stroke();
+    ctx.strokeStyle='#e4c78d';ctx.lineWidth=8;
+    ctx.beginPath();ctx.moveTo(-17,0);ctx.lineTo(-29,0);
+    ctx.moveTo(38,0);ctx.lineTo(51,0);ctx.stroke();
+
+    // Torso de faena inclinado hacia delante (forma propia, no copia).
+    ctx.fillStyle='#e8d8ae';ctx.beginPath();
+    ctx.moveTo(-23,-87+breath);ctx.lineTo(16,-93+breath);
+    ctx.lineTo(37+bend,-65);ctx.lineTo(12,-45);
+    ctx.lineTo(-24,-55);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#b29b76';ctx.lineWidth=3;ctx.stroke();
+    ctx.strokeStyle='#af343f';ctx.lineWidth=11;
+    ctx.beginPath();ctx.moveTo(-12,-52);ctx.lineTo(19,-49);ctx.stroke();
+
+    // Cabeza adelantada y barret de palla.
+    ellipse(24+bend,-103+breath,22,21,'#e3b587');
+    rect(0+bend,-124+breath,49,9,'#b99559');
+    rect(8+bend,-140+breath,32,17,'#b99559');
+    ctx.font='bold 21px system-ui';ctx.fillStyle='#2c3b33';ctx.textAlign='center';
+    ctx.fillText('•̀ᴗ•́',27+bend,-98+breath);
+
+    // Brazos abiertos, cada uno empuña una corbella.
+    ctx.strokeStyle='#e3b587';ctx.lineWidth=11;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-13,-72);ctx.lineTo(-37,-49);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(15,-73);ctx.lineTo(53+bend,-51);ctx.stroke();
+    const rotationOne=state===STATE.ATTACK && p.attackStep===1 ?
+      -0.85+phase*2.35 : (state===STATE.SPECIAL?phase*Math.PI*3:-0.15);
+    const rotationTwo=state===STATE.ATTACK && p.attackStep===2 ?
+      0.85-phase*2.35 : (state===STATE.SPECIAL?-phase*Math.PI*3:0.18);
+    drawCorbella(55+bend,-47,rotationOne,1);
+    drawCorbella(-37,-44,rotationTwo,-1);
 
     if(state===STATE.ATTACK){
-      ctx.strokeStyle='#f6e2a6';ctx.lineWidth=5;
+      ctx.strokeStyle='#ffe5a2';ctx.lineWidth=5;
       ctx.beginPath();
-      ctx.arc(x+facing*43,y-55,50,facing>0?-.9:2.25,facing>0?1.0:4.0);
+      if(p.attackStep===1)ctx.arc(45,-58,57,-1.0,1.0);
+      else ctx.arc(-29,-56,53,2.2,4.3);
       ctx.stroke();
+    }else if(state===STATE.SPECIAL){
+      ctx.strokeStyle='#d8faf1';ctx.lineWidth=5;
+      ctx.beginPath();
+      ctx.arc(0,-58,77,phase*6,-0.1+phase*6+Math.PI*1.4);
+      ctx.stroke();
+      ctx.strokeStyle='#ffda89';ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.arc(0,-58,63,-phase*7,1.8-phase*7);ctx.stroke();
     }
-    ctx.fillStyle='#f2d69c';ctx.font='bold 13px system-ui';
-    ctx.fillText('LLAURADOR',x,y-151);
+    ctx.restore();
+    ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
+    ctx.fillText('LLAURADOR',x,y-159);
   }
 
   function render(){
