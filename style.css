@@ -26,3 +26,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;ma
   .pad{order:1}.action-buttons{order:2}
   .hint{display:none}
 }
+
+/* Paso 03A.1: herramientas de depuración para aprender colisiones */
+.lesson-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hitbox-option{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}
+.hitbox-option input{accent-color:#f6cf67;width:16px;height:16px;cursor:pointer}
