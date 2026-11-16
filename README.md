@@ -1,47 +1,28 @@
 # La Colla de la Paella 🥘
 
-**Paso 02 — Estados, animaciones y primer ataque.** Primer prototipo educativo de un beat 'em up ambientado en l'Horta valenciana.
+**Paso 03A — El llaurador de les dos corbelles.** Prototipo de beat ’em up valenciano para navegador, con código pensado para aprender.
 
-## Qué puedes hacer
+## Controles
+- **Tablet/móvil:** flechas de dirección, **GOLPEAR** (dos toques encadenan dos tajos) y **REMOLÍ** (especial circular).
+- **Ordenador:** flechas/WASD, **J** o espacio para golpear, **K** para Remolí.
+- El ladrón tiene 6 PV; una combinación completa hace 1 + 2 puntos de daño. El Remolí hace 2 y necesita 6 segundos de recarga.
+- Acaba con el ladrón y recupera el arroz.
 
-- Mover al llaurador con botones táctiles, flechas o WASD.
-- Cambiar su velocidad con un deslizador.
-- Golpear tres veces al ladrón (botón GOLPEAR o J/espacio) y recuperar el arroz.
-- Observar los estados IDLE, WALK y ATTACK en pantalla.
-- Recoger el arroz solo tras derrotar al ladrón.
+## Qué estudiar
+- [Ficha de diseño funcional del llaurador](docs/llaurador-paso03.md).
+- [Guion de pruebas manuales](docs/guion-pruebas-paso03.md).
+- `src/config.js`: parámetros de velocidad, daño, alcance y tiempos.
+- `src/combat.js`: funciones puras de alcance frontal y circular.
+- `src/game.js`: máquina de estados `IDLE`, `WALK`, `ATTACK`, `SPECIAL`, lectura de controles y dibujo Canvas.
+- `index.html` y `style.css`: interfaz táctil.
 
-## Archivos
+## Pruebas automáticas
+Con Node.js instalado: `npm test`. No se necesitan dependencias.
 
-- `index.html`: estructura de la interfaz.
-- `style.css`: estilos y adaptación a móviles.
-- `src/config.js`: velocidad, posiciones y límites.
-- `src/game.js`: lógica, controles, renderizado y bucle de juego.
-
-## Segunda práctica
-
-Abre `src/config.js` y cambia `ataque.duracion` de `0.36` a `0.60`. Recarga y compara el ritmo de los golpes. Después modifica `ataque.alcance` de `105` a `160` para entender la hitbox.
-
-La lógica del personaje está en `src/game.js` y los estados son `IDLE`, `WALK` y `ATTACK`. El ataque bloquea temporalmente el movimiento; solo aplica daño una vez, cuando cruza `instanteImpacto`.
-
-### Qué observar
-
-1. Quieto: estado IDLE con pequeña animación de respiración.
-2. Caminar: estado WALK y piernas animadas.
-3. Golpear: estado ATTACK, barrido de aixada y un único impacto.
-4. Fuera de alcance o de profundidad: no se produce daño.
-
-**Nota:** por ahora todos los dibujos son Canvas, no sprites finales.
-
-En `src/game.js`, `update(delta)` aplica la fórmula `posición += dirección × velocidad × delta` para que el desplazamiento sea independiente de los FPS.
+## Ejercicio recomendado
+Modifica `ataque.segundo.dano` de `2` a `3`. ¿Cómo cambia el número de combos necesarios para derrotar al ladrón?
 
 ## Publicación
+GitHub Pages sirve la rama `main` cuando está configurado con **Deploy from a branch**. Los cambios de esta rama se revisan primero mediante un pull request.
 
-En GitHub, ve a **Settings > Pages**, selecciona **Deploy from a branch**, rama **main** y carpeta **/(root)**. Esta opción funciona en un repositorio público con el plan gratuito. Una vez activado, la web tendrá la URL que muestre GitHub Pages.
-
-## Próximas lecciones
-
-1. Enemigo móvil y respuesta al daño.
-2. Sprites y animaciones.
-3. Selección de los cuatro héroes.
-
-Gráficos provisionales, sin dependencias externas.
+Los personajes siguen dibujados de forma provisional en Canvas. Los sprites se crearán después de validar el diseño.
