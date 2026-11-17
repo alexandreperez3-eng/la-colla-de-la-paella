@@ -53,3 +53,13 @@ El daño se aplica **una única vez** por movimiento al cruzar su instante de im
 5. Prueba Remolí, hitboxes, el ciclo WALK y recuperación del arroz.
 
 **Siguiente fase:** sprites de ataque definitivos frame a frame, después de aprobar el ritmo y las mecánicas de este prototipo.
+
+## Paso 03F — Primer tajo con sprites reales
+
+Se ha preparado **`assets/llaurador_attack_izquierda.png`**, un nuevo atlas PNG transparente con cuatro poses de 112 × 128 px (448 × 128 px en total), alineado con IDLE/WALK. Ahora el primer golpe puede mostrar una preparación, el arma recogida, el tajo y la recuperación. El impacto sigue a los **0,09 segundos** y el golpe dura **0,25 segundos**.
+
+En la interfaz se ha añadido **«Corbellada izquierda: sprite nuevo»** (activado por defecto). Desmárcalo para volver al efecto Canvas anterior sin alterar la secuencia de cuatro golpes ni sus estadísticas. La estela cortante se puede activar o desactivar independientemente.
+
+**Control de calidad:** este atlas es una primera versión artística que hay que revisar a resolución real: aunque mantiene sombrero, barba, escuradents y vestuario, las proporciones del rostro aún pueden diferir ligeramente del IDLE aprobado. No se han cambiado los tres movimientos restantes ni el Remolí.
+
+La función pura `Animacion.framePorMarcas()` permite sincronizar el tercer fotograma del tajo con el instante de impacto, manteniendo un ritmo de poses no uniforme.

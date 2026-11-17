@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const b=fs.readFileSync('assets/llaurador_attack_izquierda.png');
+const png=Buffer.from([137,80,78,71,13,10,26,10]);
+assert(b.subarray(0,8).equals(png),'PNG válido');
+assert.equal(b.subarray(12,16).toString(),'IHDR','cabecera PNG');
+assert.equal(b.readUInt32BE(16),448,'cuatro celdas de 112 px');
+assert.equal(b.readUInt32BE(20),128,'altura 128 px');
+assert(b.includes(Buffer.from('tRNS')) || b[25]===6,'fondo transparente');
+assert(b.includes(Buffer.from('IDAT')),'sprite contiene imagen');
+console.log('Sprite de corbellada izquierda: dimensiones y transparencia correctas.');

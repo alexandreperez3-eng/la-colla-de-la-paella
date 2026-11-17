@@ -12,5 +12,15 @@ window.Animacion = Object.freeze({
     if(cantidadFotogramas<=0 || duracionSegundos<=0)return 0;
     const progreso=Math.min(Math.max(tiempoSegundos,0)/duracionSegundos,1);
     return Math.min(Math.floor(progreso*cantidadFotogramas),cantidadFotogramas-1);
+  },
+  // Marcas temporales para fotogramas no uniformes. El tajo pasa al frame de
+  // impacto exactamente cuando se evalúa la hitbox, sin cambiar el daño.
+  framePorMarcas(tiempoSegundos,marcas) {
+    let fotograma=0;
+    for(const marca of marcas){
+      if(tiempoSegundos>=marca)fotograma++;
+      else break;
+    }
+    return fotograma;
   }
 });
