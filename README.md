@@ -90,3 +90,15 @@ La casilla **«Corbellada derecha: sprite nuevo»** permite probar la animación
 - `Animacion.framePorMarcas()` presenta la pose de pierna extendida justo cuando ocurre el impacto. El código evita dibujar la pierna Canvas encima del nuevo sprite.
 - `tests/sprite-kick.test.cjs` valida dimensiones, transparencia, cuatro celdas con margen lateral, alineación de pies, extensión de la pierna y referencia a la sincronía de impacto.
 - La animación es **propuesta visual para probar en juego**; el ritmo y las proporciones deben revisarse en tablet antes de aprobarla definitivamente.
+
+## Paso 03I — Paleta maestra y rostro coherente
+
+- Conservamos los fotogramas de ataque actuales y los recortes reparados en el tercer fotograma izquierdo y derecho.
+- Los sprites de izquierda y derecha se han recoloreado usando tonos extraídos de `assets/llaurador_idle.png` como paleta maestra (sin ajuste global arbitrario de brillo). La piel, vestimenta y armas siguen esta referencia.
+- Se recuperan los rasgos faciales del IDLE, incluido el escuradents, mediante un recorte de la zona facial adaptado a cada pose; la postura y las armas siguen siendo las de los ataques aprobados.
+- El parámetro `?v=03i` fuerza la actualización del recurso gráfico en navegadores que pudieran haber almacenado una versión anterior.
+- **No se alteran** los tiempos, daños, hitboxes, entradas de combo ni lógica del juego.
+- Los PNG previos son recuperables desde el historial Git.
+- El test `tests/sprite-coherence.test.cjs` verifica las dimensiones, transparencia, la luminosidad media respecto al IDLE y el margen derecho de la tercera pose izquierda.
+
+La revisión visual en navegador sigue siendo necesaria: el test no puede garantizar que cada expresión facial quede perfecta.
