@@ -73,3 +73,11 @@ La segunda pose cambia a los 0,04 s, la pose de impacto entra a los **0,11 s** y
 La casilla **«Corbellada derecha: sprite nuevo»** permite probar la animación y volver al movimiento provisional sin reiniciar. La casilla de la izquierda sigue disponible independientemente. Los ataques 3 y 4 siguen con efectos Canvas sobre el sprite IDLE mientras preparamos sus animaciones definitivas.
 
 **Prueba visual:** realizar dos pulsaciones (o las cuatro del combo) y comprobar la continuidad izquierda → derecha, la cara y el escuradents, el cambio de dirección de la estela y el anclaje de los pies. El nuevo sprite es una propuesta visual que requiere aprobación jugando.
+
+## Paso 03G.1 — Corrección de la hoja de la corbella derecha
+
+- El tercer fotograma de `assets/llaurador_attack_derecha.png` tenía la hoja superior cortada por el borde derecho de su celda. La fuente de arte original sí contenía la hoja entera.
+- Se ha restaurado el extremo completo dentro de los mismos 112 × 128 píxeles, comprimiendo ligeramente únicamente el área del brazo/hoja derecha del tercer fotograma. La escala, los pies y la parte inferior permanecen alineados.
+- **Los otros tres fotogramas se mantienen idénticos píxel a píxel** en el PNG decodificado. No se cambian tiempos, daño, hitboxes, entrada de combo ni Remolí.
+- `tests/sprite-attack-right-clipping.test.cjs` decodifica el PNG y verifica que la punta queda visible con margen transparente en el borde: esta prueba fallaba con el archivo anterior y pasa con la corrección.
+- La ruta del recurso incorpora `?v=03g1` para que Safari no reutilice el PNG antiguo en caché.
