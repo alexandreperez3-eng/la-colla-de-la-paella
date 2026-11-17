@@ -1,6 +1,6 @@
 # La Colla de la Paella 🥘
 
-**Paso 03C — El llaurador también camina con sprites reales.** Prototipo de beat ’em up valenciano para navegador, con código pensado para aprender.
+**Paso 03C.1 — El llaurador también camina con sprites reales.** Prototipo de beat ’em up valenciano para navegador, con código pensado para aprender.
 
 ## Controles
 - **Tablet/móvil:** flechas de dirección, **GOLPEAR** (dos toques encadenan dos tajos) y **REMOLÍ** (especial circular).
@@ -33,3 +33,9 @@ Modifica `ataque.segundo.dano` de `2` a `3`. ¿Cómo cambia el número de combos
 GitHub Pages sirve la rama `main` cuando está configurado con **Deploy from a branch**. Los cambios de esta rama se revisan primero mediante un pull request.
 
 Tenemos dos animaciones reales. **Ejercicio:** busca `WALK_SPRITE.fps` en `src/game.js` y cambia su valor de `9` a `6`. ¿Qué diferencia aprecias al caminar a la misma velocidad? No se ha cambiado ninguna hitbox, daño ni velocidad de desplazamiento del personaje.
+
+## Revisión del WALK (03C.1)
+
+- Hemos armonizado la **paleta** de la animación WALK con el sprite IDLE aprobado, sin cambiar el diseño de personaje ni las colisiones.
+- **Pendiente de corregir:** el ciclo de marcha todavía necesita poses alternas de apoyo y paso de ambas piernas. Las seis imágenes originales no bastan: nunca intercambian claramente qué pierna avanza. Modificar FPS o invertir fotogramas no lo arregla.
+- Para hacer el nuevo ciclo, consultar [guía de poses de caminar](docs/walk-cycle-brief.md); debe revisarse visualmente antes de sustituir el spritesheet.
