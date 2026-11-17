@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03C
+ LA COLLA DE LA PAELLA · PASO 03C.1
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -24,7 +24,7 @@
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
   const walkImage = new Image();
-  walkImage.src = 'assets/llaurador_walk.png?v=03c';
+  walkImage.src = 'assets/llaurador_walk.png?v=03c1';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
