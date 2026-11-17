@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const p=fs.readFileSync('assets/llaurador_attack_derecha.png');
+assert(p.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),'PNG válido');
+assert.equal(p.readUInt32BE(16),448,'4 celdas de 112 px');
+assert.equal(p.readUInt32BE(20),128,'Altura de los fotogramas');
+assert(p[25]===6 || p.includes(Buffer.from('tRNS')),'Fondo transparente');
+const src=fs.readFileSync('src/game.js','utf8');
+assert(src.includes('attackStep===2'),'El segundo golpe usa su sprite');
+assert(src.includes('config.ataque.movimientos[1].impacto'),'Sincronía de impacto derecha');
+console.log('Corbellada derecha: sprite 4×112×128, transparencia y estado 2 verificados.');

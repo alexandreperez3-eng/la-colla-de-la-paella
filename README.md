@@ -63,3 +63,13 @@ En la interfaz se ha añadido **«Corbellada izquierda: sprite nuevo»** (activa
 **Control de calidad:** este atlas es una primera versión artística que hay que revisar a resolución real: aunque mantiene sombrero, barba, escuradents y vestuario, las proporciones del rostro aún pueden diferir ligeramente del IDLE aprobado. No se han cambiado los tres movimientos restantes ni el Remolí.
 
 La función pura `Animacion.framePorMarcas()` permite sincronizar el tercer fotograma del tajo con el instante de impacto, manteniendo un ritmo de poses no uniforme.
+
+## Paso 03G — Segundo tajo con sprites reales
+
+La **corbellada derecha** ya dispone de un atlas de cuatro poses en `assets/llaurador_attack_derecha.png` (448 × 128 px, fondo transparente). Es un corte ascendente que contrasta con la corbellada izquierda descendente del paso 03F. Se mantiene la estela luminosa del golpe.
+
+La segunda pose cambia a los 0,04 s, la pose de impacto entra a los **0,11 s** y la recuperación comienza a los 0,19 s. El tiempo total del golpe sigue siendo **0,28 s**, el daño **1** y el alcance **116 px**. No se altera la cola de pulsaciones del combo.
+
+La casilla **«Corbellada derecha: sprite nuevo»** permite probar la animación y volver al movimiento provisional sin reiniciar. La casilla de la izquierda sigue disponible independientemente. Los ataques 3 y 4 siguen con efectos Canvas sobre el sprite IDLE mientras preparamos sus animaciones definitivas.
+
+**Prueba visual:** realizar dos pulsaciones (o las cuatro del combo) y comprobar la continuidad izquierda → derecha, la cara y el escuradents, el cambio de dirección de la estela y el anclaje de los pies. El nuevo sprite es una propuesta visual que requiere aprobación jugando.
