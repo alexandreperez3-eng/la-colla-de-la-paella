@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03I
+ LA COLLA DE LA PAELLA · PASO 03I.1
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -37,9 +37,9 @@
   const walkV3Image = new Image();
   walkV3Image.src = 'assets/llaurador_walk_v3.png?v=03c3';
   const leftAttackImage = new Image();
-  leftAttackImage.src = 'assets/llaurador_attack_izquierda.png?v=03i';
+  leftAttackImage.src = 'assets/llaurador_attack_izquierda.png?v=03i1';
   const rightAttackImage = new Image();
-  rightAttackImage.src = 'assets/llaurador_attack_derecha.png?v=03i';
+  rightAttackImage.src = 'assets/llaurador_attack_derecha.png?v=03i1';
   const kickImage = new Image();
   kickImage.src = 'assets/llaurador_patada.png?v=03h';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.

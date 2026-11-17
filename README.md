@@ -102,3 +102,10 @@ La casilla **«Corbellada derecha: sprite nuevo»** permite probar la animación
 - El test `tests/sprite-coherence.test.cjs` verifica las dimensiones, transparencia, la luminosidad media respecto al IDLE y el margen derecho de la tercera pose izquierda.
 
 La revisión visual en navegador sigue siendo necesaria: el test no puede garantizar que cada expresión facial quede perfecta.
+
+
+## Paso 03I.1 — Retirada de rostros superpuestos
+
+La composición facial del paso 03I dejó visibles restos de la cara anterior debajo de la copiada desde IDLE. Esta regresión visual se corrige retirando **por completo la capa de rostro superpuesto**, conservando las poses de las dos corbelladas, los recortes reparados y la paleta ajustada a IDLE.
+
+**Limitación consciente:** la expresión facial original del ataque todavía presenta pequeñas diferencias respecto al IDLE. No afirmamos que la identidad facial ya esté igualada: antes de volver a transferir la cabeza, necesitaremos un borrado y ensamblaje de máscaras correcto que no deje restos. Se ha priorizado eliminar la doble cara sin romper el resto del arte o el combate.
