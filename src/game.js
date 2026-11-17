@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03C.2
+ LA COLLA DE LA PAELLA · PASO 03C.3
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -29,11 +29,22 @@
   // La versión nueva se carga aparte: podemos comparar sin perder el original.
   const walkV2Image = new Image();
   walkV2Image.src = 'assets/llaurador_walk_v2.png?v=03c2';
+  // Versión corregida: el rostro procede del sprite IDLE aprobado.
+  const walkV3Image = new Image();
+  walkV3Image.src = 'assets/llaurador_walk_v3.png?v=03c3';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
   const walkV2SpriteReady = () => walkV2Image.complete && walkV2Image.naturalWidth === 672 && walkV2Image.naturalHeight === 128;
-  const walkImageSeleccionada = () => useNewWalk.checked && walkV2SpriteReady() ? walkV2Image : walkImage;
+  const walkV3SpriteReady = () => walkV3Image.complete && walkV3Image.naturalWidth === 672 && walkV3Image.naturalHeight === 128;
+  // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
+  // Si una imagen falla al cargar, se usa otra versión como respaldo.
+  const walkImageSeleccionada = () => {
+    if(useNewWalk.checked && walkV3SpriteReady())return walkV3Image;
+    if(walkV2SpriteReady())return walkV2Image;
+    if(walkV3SpriteReady())return walkV3Image;
+    return walkImage;
+  };
   const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
   const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
   const keys = {up:false, down:false, left:false, right:false};
@@ -345,7 +356,7 @@
     // Conservamos el mismo rectángulo y punto de anclaje en ambos estados,
     // de manera que el cambio de animación no mueve al personaje de lugar.
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
-    const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady());
+    const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
     if(usingIdle || usingWalk){
       const sprite=usingIdle?IDLE_SPRITE:WALK_SPRITE;
       const imagen=usingIdle?idleImage:walkImageSeleccionada();
