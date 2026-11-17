@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03F
+ LA COLLA DE LA PAELLA · PASO 03G
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -23,6 +23,7 @@
   const useNewWalk = document.querySelector('#walk-v2');
   const showSlashEffects = document.querySelector('#slash-effects');
   const useLeftSprite = document.querySelector('#left-sprite');
+  const useRightSprite = document.querySelector('#right-sprite');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -36,12 +37,15 @@
   walkV3Image.src = 'assets/llaurador_walk_v3.png?v=03c3';
   const leftAttackImage = new Image();
   leftAttackImage.src = 'assets/llaurador_attack_izquierda.png?v=03f';
+  const rightAttackImage = new Image();
+  rightAttackImage.src = 'assets/llaurador_attack_derecha.png?v=03g';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
   const walkV2SpriteReady = () => walkV2Image.complete && walkV2Image.naturalWidth === 672 && walkV2Image.naturalHeight === 128;
   const walkV3SpriteReady = () => walkV3Image.complete && walkV3Image.naturalWidth === 672 && walkV3Image.naturalHeight === 128;
   const leftAttackSpriteReady = () => leftAttackImage.complete && leftAttackImage.naturalWidth === 448 && leftAttackImage.naturalHeight === 128;
+  const rightAttackSpriteReady = () => rightAttackImage.complete && rightAttackImage.naturalWidth === 448 && rightAttackImage.naturalHeight === 128;
   // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
   // Si una imagen falla al cargar, se usa otra versión como respaldo.
   const walkImageSeleccionada = () => {
@@ -53,6 +57,7 @@
   const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
   const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
   const LEFT_ATTACK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
+  const RIGHT_ATTACK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: cada personaje ocupa un estado en cada actualización.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -276,9 +281,12 @@
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
     }else if(p.state===STATE.ATTACK){
       const tecnica=config.ataque.movimientos[p.attackStep-1];
-      const conSprite=p.attackStep===1 && useLeftSprite.checked && leftAttackSpriteReady();
+      const conSpriteIzq=p.attackStep===1 && useLeftSprite.checked && leftAttackSpriteReady();
+      const conSpriteDer=p.attackStep===2 && useRightSprite.checked && rightAttackSpriteReady();
+      const conSprite=conSpriteIzq || conSpriteDer;
+      const marcas=conSpriteDer ? [0.04,tecnica.impacto,0.19] : [0.035,tecnica.impacto,0.17];
       const frame=conSprite
-        ? Animacion.framePorMarcas(p.stateTime,[0.035,tecnica.impacto,0.17])
+        ? Animacion.framePorMarcas(p.stateTime,marcas)
         : Animacion.frameUnico(p.stateTime,tecnica.duracion,4);
       animationLabel.textContent=(conSprite?'Sprite · ':'Provisional · ')+
         'COMBO '+p.attackStep+'/4 · '+tecnica.nombre+' · fase '+(frame+1)+'/4';
@@ -421,22 +429,26 @@
   function drawPlayer(){
     const p=game.player;
 
-    // Primer tajo: nuevo spritesheet opcional; el resto conserva el IDLE aprobado.
-    // Nunca alteramos tiempos, hitboxes ni daños por cambiar una animación.
+    // Tajos izquierda/derecha usan sprites distintos. Patada y cruzado siguen provisionales.
+    // La selección visual no modifica ventanas de impacto, hitboxes ni daño.
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
     const usingLeft=p.state===STATE.ATTACK && p.attackStep===1
       && useLeftSprite.checked && leftAttackSpriteReady();
-    const usingCombo=p.state===STATE.ATTACK && (idleSpriteReady() || usingLeft);
+    const usingRight=p.state===STATE.ATTACK && p.attackStep===2
+      && useRightSprite.checked && rightAttackSpriteReady();
+    const usingCombo=p.state===STATE.ATTACK && (idleSpriteReady() || usingLeft || usingRight);
     const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
     if(usingIdle || usingWalk || usingCombo){
-      const sprite=usingWalk?WALK_SPRITE:(usingLeft?LEFT_ATTACK_SPRITE:IDLE_SPRITE);
-      const imagen=usingWalk?walkImageSeleccionada():(usingLeft?leftAttackImage:idleImage);
+      const sprite=usingWalk?WALK_SPRITE:(usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:IDLE_SPRITE));
+      const imagen=usingWalk?walkImageSeleccionada():(usingLeft?leftAttackImage:(usingRight?rightAttackImage:idleImage));
       if(!imagen.complete || imagen.naturalWidth !== sprite.ancho*sprite.cantidad)return;
       const fps=usingWalk?
         clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):IDLE_SPRITE.fps;
       const frame=usingLeft
         ? Animacion.framePorMarcas(p.stateTime,[0.035,config.ataque.movimientos[0].impacto,0.17])
-        : (usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad));
+        : (usingRight
+          ? Animacion.framePorMarcas(p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19])
+          : (usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad)));
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
@@ -446,7 +458,7 @@
         ctx.translate(Math.sin(fase*Math.PI)*4,0);
       }
       // Mismo rectángulo, escala y punto de apoyo en pies para todas las poses.
-      // En el primer tajo la pose de impacto coincide con la ventana de daño.
+      // En ambos tajos la pose de impacto coincide con la ventana de daño.
       ctx.drawImage(imagen,frame*sprite.ancho,0,sprite.ancho,sprite.alto,-64,-148,128,148);
       if(usingCombo)drawComboEffects(p);
       ctx.restore();
