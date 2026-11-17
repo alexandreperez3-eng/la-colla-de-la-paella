@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#143b3b" />
-  <title>La Colla de la Paella · Paso 03C.1</title>
-  <link rel="stylesheet" href="style.css?v=03c1" />
+  <title>La Colla de la Paella · Paso 03C.2</title>
+  <link rel="stylesheet" href="style.css?v=03c2" />
 </head>
 <body>
 <main class="game-shell">
   <header>
-    <div><small>LA COLLA DE LA PAELLA</small><h1>Camí de l'Horta <span>· PASO 03C.1</span></h1></div>
+    <div><small>LA COLLA DE LA PAELLA</small><h1>Camí de l'Horta <span>· PASO 03C.2</span></h1></div>
     <div class="goal" id="objective">⚔️ Derrota al ladrón de entrenamiento</div>
   </header>
   <div class="stage"><canvas id="game" width="900" height="480" aria-label="Escenario del juego: llaurador en l'Horta"></canvas></div>
@@ -27,14 +27,14 @@
       <label for="speed">Velocidad del llaurador: <output id="speed-value">210</output> px/s</label>
       <input id="speed" type="range" min="100" max="420" step="10" value="210" />
       <div class="hint">Cambia el valor y nota cómo responde. En PC: WASD o flechas; J para combo y K para Remolí.</div>
-      <div class="lesson-actions"><button class="reset" id="reset">↺ Volver a empezar</button><label class="hitbox-option"><input type="checkbox" id="debug-hitboxes"> Mostrar hitboxes</label></div>
+      <div class="lesson-actions"><button class="reset" id="reset">↺ Volver a empezar</button><label class="hitbox-option"><input type="checkbox" id="debug-hitboxes"> Mostrar hitboxes</label><label class="hitbox-option"><input type="checkbox" id="walk-v2" checked> WALK nuevo (comparar)</label></div>
     </div>
   </section>
   <footer><span id="coordinates">Posición: 120, 365</span><strong id="state">Estado: IDLE</strong><strong id="combo">Combo: —</strong><strong id="animation-label">Sprite: IDLE 1/4</strong><span id="status">Derrota al ladrón antes de recoger el arroz.</span></footer>
 </main>
-<script src="src/config.js?v=03c1" defer></script>
-<script src="src/combat.js?v=03c1" defer></script>
-<script src="src/animation.js?v=03c1" defer></script>
-<script src="src/game.js?v=03c1" defer></script>
+<script src="src/config.js?v=03c2" defer></script>
+<script src="src/combat.js?v=03c2" defer></script>
+<script src="src/animation.js?v=03c2" defer></script>
+<script src="src/game.js?v=03c2" defer></script>
 </body>
 </html>
