@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03B
+ LA COLLA DE LA PAELLA · PASO 03C
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -20,11 +20,16 @@
   const comboLabel = document.querySelector('#combo');
   const debugHitboxes = document.querySelector('#debug-hitboxes');
   const animationLabel = document.querySelector('#animation-label');
+  // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
-  // No dibujamos una imagen hasta que esté cargada: si falla, queda Canvas como respaldo.
-  const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448;
+  const walkImage = new Image();
+  walkImage.src = 'assets/llaurador_walk.png?v=03c';
+  // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
+  const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
+  const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
   const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
+  const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: el personaje solo está en UNO de estos tres estados.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -224,10 +229,17 @@
     }else{
       p.animationTime+=delta;
     }
-    const currentFrame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
-    animationLabel.textContent=p.state===STATE.IDLE
-      ? 'Sprite: IDLE '+(currentFrame+1)+'/4'
-      : 'Sprite: '+p.state+' (provisional)';
+    // Caminar más rápido también acelera el ciclo, sin cambiar la velocidad del juego.
+    const walkFps=clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
+    if(p.state===STATE.IDLE){
+      const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
+      animationLabel.textContent='Sprite: IDLE '+(frame+1)+'/4';
+    }else if(p.state===STATE.WALK){
+      const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
+      animationLabel.textContent='Sprite: WALK '+(frame+1)+'/6';
+    }else{
+      animationLabel.textContent='Sprite: '+p.state+' (provisional)';
+    }
 
     coordinates.textContent=`Posición: ${Math.round(p.x)}, ${Math.round(p.y)}`;
     stateLabel.textContent='Estado: '+p.state+(p.state===STATE.ATTACK?' '+p.attackStep:'');
@@ -321,18 +333,25 @@
   function drawPlayer(){
     const p=game.player;
 
-    // Paso 03B: solamente IDLE usa el primer spritesheet real.
-    // WALK, ATTACK y SPECIAL seguirán con dibujos Canvas hasta generar sus hojas.
-    if(p.state===STATE.IDLE && idleSpriteReady()){
-      const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
+    // IDLE y WALK usan sprites reales; ATTACK y SPECIAL siguen usando Canvas.
+    // Conservamos el mismo rectángulo y punto de anclaje en ambos estados,
+    // de manera que el cambio de animación no mueve al personaje de lugar.
+    const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
+    const usingWalk=p.state===STATE.WALK && walkSpriteReady();
+    if(usingIdle || usingWalk){
+      const sprite=usingIdle?IDLE_SPRITE:WALK_SPRITE;
+      const imagen=usingIdle?idleImage:walkImage;
+      const fps=usingIdle?sprite.fps:
+        clamp(sprite.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
+      const frame=Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
-      // La posición se mide desde los pies: por eso usamos altura negativa.
+      // La posición del jugador está en los pies; el sprite se dibuja arriba.
       ctx.drawImage(
-        idleImage,
-        frame*IDLE_SPRITE.ancho,0,
-        IDLE_SPRITE.ancho,IDLE_SPRITE.alto,
+        imagen,
+        frame*sprite.ancho,0,
+        sprite.ancho,sprite.alto,
         -64,-148,128,148
       );
       ctx.restore();
