@@ -81,3 +81,12 @@ La casilla **«Corbellada derecha: sprite nuevo»** permite probar la animación
 - **Los otros tres fotogramas se mantienen idénticos píxel a píxel** en el PNG decodificado. No se cambian tiempos, daño, hitboxes, entrada de combo ni Remolí.
 - `tests/sprite-attack-right-clipping.test.cjs` decodifica el PNG y verifica que la punta queda visible con margen transparente en el borde: esta prueba fallaba con el archivo anterior y pasa con la corrección.
 - La ruta del recurso incorpora `?v=03g1` para que Safari no reutilice el PNG antiguo en caché.
+
+## Paso 03H — Patada frontal con cuatro poses reales
+
+- `assets/llaurador_patada.png` (576 × 128 px) contiene **cuatro poses de 144 × 128 px**: guardia, rodilla elevada, extensión de la espardenya y recuperación. Las celdas son deliberadamente más anchas para evitar recortes de la pierna.
+- El tercer movimiento del combo utiliza este atlas si está activada **«Patada: sprite nuevo»**. Al desactivarlo regresa el dibujo Canvas provisional para comparar.
+- Los cambios son únicamente gráficos: **patada 0,32 s, impacto 0,15 s, daño 1, alcance 95 px, retroceso 26 px**, idénticos a la versión anterior. La cola del combo, las corbelladas, el remate y el Remolí permanecen sin cambios.
+- `Animacion.framePorMarcas()` presenta la pose de pierna extendida justo cuando ocurre el impacto. El código evita dibujar la pierna Canvas encima del nuevo sprite.
+- `tests/sprite-kick.test.cjs` valida dimensiones, transparencia, cuatro celdas con margen lateral, alineación de pies, extensión de la pierna y referencia a la sincronía de impacto.
+- La animación es **propuesta visual para probar en juego**; el ritmo y las proporciones deben revisarse en tablet antes de aprobarla definitivamente.
