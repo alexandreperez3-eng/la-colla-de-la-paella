@@ -517,8 +517,10 @@
   // las dos cajas se calculan sobre la posición de los pies.
   function drawHitboxes() {
     const p=game.player, e=game.enemy, a=config.ataque, l=config.ladron;
-    const xInicio=p.facing>0?p.x-12:p.x-a.alcance;
-    const ancho=a.alcance+12;
+    // La caja de depuración debe coincidir con el alcance de cada movimiento.
+    const alcance=p.state===STATE.ATTACK ? a.movimientos[p.attackStep-1].alcance : a.alcance;
+    const xInicio=p.facing>0?p.x-12:p.x-alcance;
+    const ancho=alcance+12;
     const yCentro=p.y-70;
     ctx.save();
     ctx.setLineDash([7,5]);
