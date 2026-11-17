@@ -1,43 +1,27 @@
 # La Colla de la Paella 🥘
 
-**Paso 03C.2 — Prueba A/B de dos ciclos de caminar.** Prototipo de beat ’em up valenciano para navegador, con código pensado para aprender.
+**Paso 03C.3 — Coherencia del rostro y escuradents al caminar.**
 
-## Controles
-- **Tablet/móvil:** flechas de dirección, **GOLPEAR** (dos toques encadenan dos tajos) y **REMOLÍ** (especial circular).
-- **Ordenador:** flechas/WASD, **J** o espacio para golpear, **K** para Remolí.
-- El ladrón tiene 6 PV; una combinación completa hace 1 + 2 puntos de daño. El Remolí hace 2 y necesita 6 segundos de recarga.
-- Acaba con el ladrón y recupera el arroz.
-- Activa **Mostrar hitboxes** para ver la zona frontal amarilla de la corbella y la hurtbox rosa del ladrón.
-- La casilla **WALK nuevo (comparar)** permite probar los seis fotogramas nuevos o desmarcarla para volver inmediatamente a la marcha anterior. El nuevo ciclo es una prueba visual, todavía no aprobado.
-- En **IDLE** se dibuja un spritesheet de 4 fotogramas (6 FPS). En **WALK** se dibuja el ciclo de 6 poses que aprobamos (9 FPS a 245 px/s). **ATTACK** y **SPECIAL** conservan los dibujos provisionales de Canvas por ahora.
-- El ritmo de **WALK** sigue el deslizador de velocidad: a mayor velocidad, más fotogramas por segundo (entre 5 y 14 FPS). El estado `WALK` comienza por el primer fotograma cada vez que entramos en él.
+## Problema detectado durante las pruebas
+Al pasar de `IDLE` a `WALK`, la cara parecía reducirse y se perdía el escuradents. La imagen conceptual a alta resolución lo incluía, pero la versión final que utiliza Canvas se redujo a seis celdas de 112 × 128 px y perdió detalle, además de tener proporciones faciales distintas.
 
-## Qué estudiar
-- [Ficha de diseño funcional del llaurador](docs/llaurador-paso03.md).
-- [Guion de pruebas manuales](docs/guion-pruebas-paso03.md).
-- `src/config.js`: parámetros de velocidad, daño, alcance y tiempos.
-- `src/combat.js`: solapamiento de hitbox frontal y hurtbox del enemigo, además del alcance circular.
-- Ajustamos el alcance frontal a 116 píxeles y contamos la anchura del enemigo (22 px por lado). Así no hace falta tocarlo con el cuerpo.
-- `assets/llaurador_idle.png`: PNG de 448 × 128 px, cuatro celdas de 112 × 128.
-- `assets/llaurador_walk_v2.png`: segundo ciclo de seis poses, 672 × 128 px, extraído de la lámina seleccionada y alineado a la misma escala, con fondo transparente. No modifica `assets/llaurador_walk.png`.
-- `assets/llaurador_walk.png`: PNG de 672 × 128 px, seis celdas de 112 × 128. Son exactamente las **primeras seis poses** aprobadas, con fondo eliminado, escala común y pies alineados.
-- `src/animation.js`: convierte tiempo transcurrido en índice de fotograma.
-- `src/game.js`: máquina de estados `IDLE`, `WALK`, `ATTACK`, `SPECIAL`, lectura de controles y dibujo Canvas.
-- `index.html` y `style.css`: interfaz táctil.
+## Solución
+- `assets/llaurador_walk_v3.png`: seis pasos del WALK v2, pero con la **cabeza y el escuradents del IDLE aprobado**, adaptados al balanceo del cuerpo. Se mantiene el anclaje de los pies y la escala de los spritesheets (672 × 128 px).
+- El selector táctil **WALK con cara corregida (comparar)** alterna entre la corrección v3 (activada) y el antiguo v2 (desactivada).
+- La imagen anterior `llaurador_walk_v2.png` permanece en el repositorio, de modo que podemos comparar y revertir sin perder nada.
+- `src/game.js` carga los recursos por separado, con fallback si falla alguna imagen.
+- La lógica de movimiento, los estados, daños y hitboxes **no se han modificado**.
+
+## Qué aprender
+Un sprite no es el dibujo conceptual: al reducirlo, los detalles de 1–2 píxeles como un escuradents pueden desaparecer. En imágenes para juegos hay que revisar a la **resolución real de reproducción**, no solamente la ilustración grande.
+
+## Validación manual
+1. Comprobar que aparece el rostro veterano y el escuradents tanto quieto como andando.
+2. Alternar WALK antiguo/corregido sin reiniciar; evaluar si hay saltos o cortes en el cuello.
+3. Caminar hacia derecha e izquierda; detenerse para volver a IDLE.
+4. Probar combo y «Mostrar hitboxes»: las mecánicas deben seguir igual.
 
 ## Pruebas automáticas
-Con Node.js instalado: `npm test`. No se necesitan dependencias.
+`npm test`. Todas las pruebas se ejecutan sin dependencias externas.
 
-## Ejercicio recomendado
-Modifica `ataque.segundo.dano` de `2` a `3`. ¿Cómo cambia el número de combos necesarios para derrotar al ladrón?
-
-## Publicación
-GitHub Pages sirve la rama `main` cuando está configurado con **Deploy from a branch**. Los cambios de esta rama se revisan primero mediante un pull request.
-
-Tenemos dos animaciones reales. **Ejercicio:** busca `WALK_SPRITE.fps` en `src/game.js` y cambia su valor de `9` a `6`. ¿Qué diferencia aprecias al caminar a la misma velocidad? No se ha cambiado ninguna hitbox, daño ni velocidad de desplazamiento del personaje.
-
-## Revisión del WALK (03C.1)
-
-- Hemos armonizado la **paleta** de la animación WALK con el sprite IDLE aprobado, sin cambiar el diseño de personaje ni las colisiones.
-- **Pendiente de corregir:** el ciclo de marcha todavía necesita poses alternas de apoyo y paso de ambas piernas. Las seis imágenes originales no bastan: nunca intercambian claramente qué pierna avanza. Modificar FPS o invertir fotogramas no lo arregla.
-- Para hacer el nuevo ciclo, consultar [guía de poses de caminar](docs/walk-cycle-brief.md); debe revisarse visualmente antes de sustituir el spritesheet.
+[Diseño y estadísticas del llaurador](docs/llaurador-paso03.md).
