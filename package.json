@@ -1,9 +1,9 @@
 {
   "name": "la-colla-de-la-paella",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": true,
   "description": "Beat em up valenciano experimental",
   "scripts": {
-    "test": "node --check src/config.js && node --check src/combat.js && node --check src/game.js && node --check src/animation.js && node --check src/combo.js && node tests/combat.test.cjs && node tests/combo.test.cjs && node tests/animation.test.cjs && node tests/sprites.test.cjs && node tests/sprite-walk.test.cjs && node tests/sprite-attack.test.cjs && node tests/sprite-attack-left.test.cjs && node tests/sprite-attack-right.test.cjs && node tests/sprite-attack-right-clipping.test.cjs"
+    "test": "node --check src/config.js && node --check src/combat.js && node --check src/game.js && node --check src/animation.js && node --check src/combo.js && node tests/combat.test.cjs && node tests/combo.test.cjs && node tests/animation.test.cjs && node tests/sprites.test.cjs && node tests/sprite-walk.test.cjs && node tests/sprite-attack.test.cjs && node tests/sprite-attack-left.test.cjs && node tests/sprite-attack-right.test.cjs && node tests/sprite-attack-right-clipping.test.cjs && node tests/sprite-kick.test.cjs"
   }
 }

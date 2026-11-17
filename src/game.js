@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03G.1
+ LA COLLA DE LA PAELLA · PASO 03H
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -24,6 +24,7 @@
   const showSlashEffects = document.querySelector('#slash-effects');
   const useLeftSprite = document.querySelector('#left-sprite');
   const useRightSprite = document.querySelector('#right-sprite');
+  const useKickSprite = document.querySelector('#kick-sprite');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -39,6 +40,8 @@
   leftAttackImage.src = 'assets/llaurador_attack_izquierda.png?v=03f';
   const rightAttackImage = new Image();
   rightAttackImage.src = 'assets/llaurador_attack_derecha.png?v=03g1';
+  const kickImage = new Image();
+  kickImage.src = 'assets/llaurador_patada.png?v=03h';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
@@ -46,6 +49,7 @@
   const walkV3SpriteReady = () => walkV3Image.complete && walkV3Image.naturalWidth === 672 && walkV3Image.naturalHeight === 128;
   const leftAttackSpriteReady = () => leftAttackImage.complete && leftAttackImage.naturalWidth === 448 && leftAttackImage.naturalHeight === 128;
   const rightAttackSpriteReady = () => rightAttackImage.complete && rightAttackImage.naturalWidth === 448 && rightAttackImage.naturalHeight === 128;
+  const kickSpriteReady = () => kickImage.complete && kickImage.naturalWidth === 576 && kickImage.naturalHeight === 128;
   // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
   // Si una imagen falla al cargar, se usa otra versión como respaldo.
   const walkImageSeleccionada = () => {
@@ -58,6 +62,8 @@
   const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
   const LEFT_ATTACK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
   const RIGHT_ATTACK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
+  // La patada necesita celdas más anchas para que no se recorte la espardenya.
+  const KICK_SPRITE = Object.freeze({ancho:144,alto:128,cantidad:4});
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: cada personaje ocupa un estado en cada actualización.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -283,8 +289,10 @@
       const tecnica=config.ataque.movimientos[p.attackStep-1];
       const conSpriteIzq=p.attackStep===1 && useLeftSprite.checked && leftAttackSpriteReady();
       const conSpriteDer=p.attackStep===2 && useRightSprite.checked && rightAttackSpriteReady();
-      const conSprite=conSpriteIzq || conSpriteDer;
-      const marcas=conSpriteDer ? [0.04,tecnica.impacto,0.19] : [0.035,tecnica.impacto,0.17];
+      const conSpritePatada=p.attackStep===3 && useKickSprite.checked && kickSpriteReady();
+      const conSprite=conSpriteIzq || conSpriteDer || conSpritePatada;
+      const marcas=conSpritePatada ? [0.06,tecnica.impacto,0.245] :
+        (conSpriteDer ? [0.04,tecnica.impacto,0.19] : [0.035,tecnica.impacto,0.17]);
       const frame=conSprite
         ? Animacion.framePorMarcas(p.stateTime,marcas)
         : Animacion.frameUnico(p.stateTime,tecnica.duracion,4);
@@ -385,14 +393,14 @@
 
   // Estelas provisionales: el barrido es curvo, no un empuje recto del brazo.
   // Se dibujan sobre IDLE para mantener el rostro, la paleta y las dos corbelles.
-  function drawComboEffects(p){
+  function drawComboEffects(p,kickSpriteActive=false){
     const tecnica=config.ataque.movimientos[p.attackStep-1];
     const fase=clamp(p.stateTime/tecnica.duracion,0,1);
     const intensidad=clamp((fase-0.12)*9,0,1)*clamp((0.92-fase)*7,0,1);
     ctx.save();
     ctx.lineCap='round';
-    if(p.attackStep===3){
-      // Pierna adelantada: patada frontal con espardenya visible.
+    if(p.attackStep===3 && !kickSpriteActive){
+      // Pierna Canvas provisional: se omite cuando se usa el sprite real de patada.
       const extension=Math.sin(fase*Math.PI)*48;
       ctx.strokeStyle='#3e4655';ctx.lineWidth=17;
       ctx.beginPath();ctx.moveTo(12,-43);
@@ -429,26 +437,30 @@
   function drawPlayer(){
     const p=game.player;
 
-    // Tajos izquierda/derecha usan sprites distintos. Patada y cruzado siguen provisionales.
+    // Tajos y patada usan sprites propios; el remate cruzado sigue provisional.
     // La selección visual no modifica ventanas de impacto, hitboxes ni daño.
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
     const usingLeft=p.state===STATE.ATTACK && p.attackStep===1
       && useLeftSprite.checked && leftAttackSpriteReady();
     const usingRight=p.state===STATE.ATTACK && p.attackStep===2
       && useRightSprite.checked && rightAttackSpriteReady();
-    const usingCombo=p.state===STATE.ATTACK && (idleSpriteReady() || usingLeft || usingRight);
+    const usingKick=p.state===STATE.ATTACK && p.attackStep===3
+      && useKickSprite.checked && kickSpriteReady();
+    const usingCombo=p.state===STATE.ATTACK && (idleSpriteReady() || usingLeft || usingRight || usingKick);
     const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
     if(usingIdle || usingWalk || usingCombo){
-      const sprite=usingWalk?WALK_SPRITE:(usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:IDLE_SPRITE));
-      const imagen=usingWalk?walkImageSeleccionada():(usingLeft?leftAttackImage:(usingRight?rightAttackImage:idleImage));
+      const sprite=usingWalk?WALK_SPRITE:
+        (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:(usingKick?KICK_SPRITE:IDLE_SPRITE)));
+      const imagen=usingWalk?walkImageSeleccionada():
+        (usingLeft?leftAttackImage:(usingRight?rightAttackImage:(usingKick?kickImage:idleImage)));
       if(!imagen.complete || imagen.naturalWidth !== sprite.ancho*sprite.cantidad)return;
       const fps=usingWalk?
         clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):IDLE_SPRITE.fps;
-      const frame=usingLeft
-        ? Animacion.framePorMarcas(p.stateTime,[0.035,config.ataque.movimientos[0].impacto,0.17])
-        : (usingRight
-          ? Animacion.framePorMarcas(p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19])
-          : (usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad)));
+      let frame;
+      if(usingLeft)frame=Animacion.framePorMarcas(p.stateTime,[0.035,config.ataque.movimientos[0].impacto,0.17]);
+      else if(usingRight)frame=Animacion.framePorMarcas(p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19]);
+      else if(usingKick)frame=Animacion.framePorMarcas(p.stateTime,[0.06,config.ataque.movimientos[2].impacto,0.245]);
+      else frame=usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
@@ -457,10 +469,11 @@
         const fase=Math.min(1,p.stateTime/tecnica.duracion);
         ctx.translate(Math.sin(fase*Math.PI)*4,0);
       }
-      // Mismo rectángulo, escala y punto de apoyo en pies para todas las poses.
-      // En ambos tajos la pose de impacto coincide con la ventana de daño.
-      ctx.drawImage(imagen,frame*sprite.ancho,0,sprite.ancho,sprite.alto,-64,-148,128,148);
-      if(usingCombo)drawComboEffects(p);
+      // Patada: celda más ancha, misma altura y anclaje de los pies.
+      // El tercer fotograma coincide con el impacto y la extensión de pierna.
+      const destX=usingKick?-66:-64, destWidth=usingKick?164:128;
+      ctx.drawImage(imagen,frame*sprite.ancho,0,sprite.ancho,sprite.alto,destX,-148,destWidth,148);
+      if(usingCombo)drawComboEffects(p,usingKick);
       ctx.restore();
       ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
       ctx.fillText('LLAURADOR',p.x,p.y-159);
