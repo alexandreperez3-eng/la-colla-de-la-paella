@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03C.3
+ LA COLLA DE LA PAELLA · PASO 03D
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -21,6 +21,7 @@
   const debugHitboxes = document.querySelector('#debug-hitboxes');
   const animationLabel = document.querySelector('#animation-label');
   const useNewWalk = document.querySelector('#walk-v2');
+  const useAttackSprite = document.querySelector('#attack-sprite');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -32,11 +33,14 @@
   // Versión corregida: el rostro procede del sprite IDLE aprobado.
   const walkV3Image = new Image();
   walkV3Image.src = 'assets/llaurador_walk_v3.png?v=03c3';
+  const attack1Image = new Image();
+  attack1Image.src = 'assets/llaurador_attack_1.png?v=03d';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
   const walkV2SpriteReady = () => walkV2Image.complete && walkV2Image.naturalWidth === 672 && walkV2Image.naturalHeight === 128;
   const walkV3SpriteReady = () => walkV3Image.complete && walkV3Image.naturalWidth === 672 && walkV3Image.naturalHeight === 128;
+  const attack1SpriteReady = () => attack1Image.complete && attack1Image.naturalWidth === 448 && attack1Image.naturalHeight === 128;
   // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
   // Si una imagen falla al cargar, se usa otra versión como respaldo.
   const walkImageSeleccionada = () => {
@@ -47,6 +51,7 @@
   };
   const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
   const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
+  const ATTACK1_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: el personaje solo está en UNO de estos tres estados.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -254,8 +259,11 @@
       animationLabel.textContent='Sprite: IDLE '+(frame+1)+'/4';
     }else if(p.state===STATE.WALK){
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
-      const version=useNewWalk.checked && walkV2SpriteReady() ? 'nuevo' : 'anterior';
+      const version=useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior';
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
+    }else if(p.state===STATE.ATTACK && p.attackStep===1 && useAttackSprite.checked && attack1SpriteReady()){
+      const frame=Animacion.frameUnico(p.stateTime,config.ataque.primero.duracion,ATTACK1_SPRITE.cantidad);
+      animationLabel.textContent='Sprite: ATTACK 1 nuevo '+(frame+1)+'/4';
     }else{
       animationLabel.textContent='Sprite: '+p.state+' (provisional)';
     }
@@ -352,18 +360,22 @@
   function drawPlayer(){
     const p=game.player;
 
-    // IDLE y WALK usan sprites reales; ATTACK y SPECIAL siguen usando Canvas.
+    // IDLE, WALK y ATTACK 1 experimental usan sprites; ATTACK 2 y SPECIAL siguen en Canvas.
     // Conservamos el mismo rectángulo y punto de anclaje en ambos estados,
     // de manera que el cambio de animación no mueve al personaje de lugar.
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
     const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
-    if(usingIdle || usingWalk){
-      const sprite=usingIdle?IDLE_SPRITE:WALK_SPRITE;
-      const imagen=usingIdle?idleImage:walkImageSeleccionada();
+    const usingAttack1=p.state===STATE.ATTACK && p.attackStep===1 && useAttackSprite.checked && attack1SpriteReady();
+    if(usingIdle || usingWalk || usingAttack1){
+      const sprite=usingIdle?IDLE_SPRITE:(usingAttack1?ATTACK1_SPRITE:WALK_SPRITE);
+      const imagen=usingIdle?idleImage:(usingAttack1?attack1Image:walkImageSeleccionada());
       if(!imagen.complete || imagen.naturalWidth !== sprite.ancho*sprite.cantidad)return;
-      const fps=usingIdle?sprite.fps:
-        clamp(sprite.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
-      const frame=Animacion.frame(p.animationTime,fps,sprite.cantidad);
+      const fps=usingIdle?IDLE_SPRITE.fps:
+        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
+      // ATTACK no se repite: avanza hasta el último fotograma y termina.
+      const frame=usingAttack1?
+        Animacion.frameUnico(p.stateTime,config.ataque.primero.duracion,sprite.cantidad):
+        Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
