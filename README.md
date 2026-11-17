@@ -1,29 +1,55 @@
 # La Colla de la Paella 🥘
 
-**Paso 03D — Primer tajo con sprites reales, en comparación experimental.**
+**Paso 03E — Combo jugable de cuatro movimientos (versión provisional).**
 
-## Qué hemos incorporado
+## Nuevo combo del Llaurador
 
-- El primer golpe de corbella (`ATTACK 1`) tiene cuatro poses en `assets/llaurador_attack_1.png` (448×128 px, transparencia).
-- Si está activado **ATTACK 1 nuevo (comparar)**, el juego utiliza el nuevo spritesheet. Si se desactiva, mantiene el dibujo de Canvas anterior. `ATTACK 2` y `SPECIAL` siguen utilizando Canvas.
-- **La lógica de combate permanece igual:** primer impacto a 0,14 s, duración 0,34 s, daño 1, alcance, cola del segundo golpe y recarga del especial.
-- La imagen es experimental, pendiente de revisión de tamaño de la cara, escuradents y continuidad respecto a `IDLE`.
-- La comparación anterior `WALK v2/v3` sigue funcionando, con el rostro corregido.
+Pulsa **COMBO ×4** cuatro veces: `corbella izquierda → corbella derecha → patada frontal → doble corte cruzado`.
 
-## Nuevo concepto: no todas las animaciones son bucles
+| Paso | Golpe | Duración | Impacto | Daño | Efecto |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | Corbellada izquierda | 0,25 s | 0,09 s | 1 | Estela descendente |
+| 2 | Corbellada derecha | 0,28 s | 0,11 s | 1 | Estela ascendente |
+| 3 | Patada frontal | 0,32 s | 0,15 s | 1 | Pierna extendida y retroceso de 26 px |
+| 4 | Creuament de Corbelles | 0,45 s | 0,20 s | 2 | Dos estelas en X y retroceso de 38 px |
 
-`Animacion.frame()` repite cíclicamente la secuencia, como corresponde a `IDLE` y `WALK`. La nueva función `Animacion.frameUnico(tiempo, duracion, cantidad)` recorre las poses una sola vez y se detiene en el último fotograma. **La animación no decide cuándo se hace daño**; el impacto sigue determinado por `update(delta)`.
+El ladrón de entrenamiento dispone de 10 PV: **dos combos completos** bastan para derrotarlo si todos los golpes conectan. Se mantiene el Remolí especial, con 6 s de recarga.
 
-## Cómo probarlo
+## Controles y encadenado
 
-1. Camina y comprueba las transiciones entre `IDLE` y `WALK`.
-2. Pulsa **GOLPEAR** una vez: se reproduce el primer tajo con cuatro poses.
-3. Desactiva **ATTACK 1 nuevo (comparar)** y repite para ver la versión Canvas anterior.
-4. Pulsa dos veces para verificar que el segundo golpe conserva sus mecánicas.
-5. Comprueba hitboxes y Remolí: ningún comportamiento de combate ha cambiado.
+- **Tablet:** cruceta, botón **COMBO ×4** y botón **REMOLÍ**.
+- **Ordenador:** flechas/WASD, **J**/espacio para el combo, **K** para el especial.
+- Puedes pulsar **cuatro veces rápido**: las entradas se almacenan en una cola limitada a los tres movimientos siguientes. No se puede encolar indefinidamente ni ejecutar un quinto golpe.
+- Con menos pulsaciones, el personaje termina el golpe actual y regresa a guardia.
+- **Mostrar hitboxes** sigue mostrando el alcance; el golpe 3 tiene un alcance ligeramente inferior y el cuarto algo mayor.
+- **Estelas de ataque** permite ocultar o mostrar los efectos provisionales.
+- **WALK con cara corregida** mantiene la comparación v2/v3 del ciclo de caminar.
 
-## Tests
+## Animación provisional
 
-Ejecuta `npm test` para comprobar animación cíclica y no cíclica, combate, tamaño de los atlases y transparencia.
+El personaje parte del sprite **IDLE aprobado** para los cuatro golpes; así conserva la cabeza, el barret, la faixa y el escuradents. Canvas añade las estelas y una pierna animada para la patada. **Todavía no son spritesheets definitivos de ataque**: hay que revisar visualmente el movimiento de los brazos y las piernas antes de aprobar el arte.
 
-[Diseño original y criterios de combate](docs/llaurador-paso03.md).
+El antiguo spritesheet experimental de ATTACK 1 permanece en `assets/llaurador_attack_1.png`, sin utilizarse en el nuevo combo, para no perder versiones.
+
+## Código que estudiar
+
+- `src/config.js`: datos de las cuatro técnicas; duración, impacto, daño, alcance y retroceso.
+- `src/combo.js`: lógica pura del buffer de entradas, `encolar()` y `siguiente()`.
+- `src/game.js`: `startAttack()`, `update()`, `aplicarImpacto()` y `drawComboEffects()`.
+- `src/combat.js`: detección de colisiones, independiente de los efectos gráficos.
+
+El daño se aplica **una única vez** por movimiento al cruzar su instante de impacto; las estelas son efectos visuales y no proyectiles. No se ha modificado la lógica del Remolí.
+
+## Pruebas
+
+`npm test` ejecuta pruebas de los cuatro movimientos, límites de cola, impactos configurados, combate, animación y validación de sprites existentes.
+
+### Qué revisar jugando
+
+1. Pulsa cuatro veces rápidamente: debe ejecutar izquierda, derecha, patada y doble X, sin repetir.
+2. Pulsa solo una, dos o tres veces: debe detenerse donde corresponda.
+3. Comprueba cada movimiento mirando a derecha e izquierda, sin que cambie el tamaño de la cara.
+4. Verifica el retroceso del enemigo en la patada y remate, sin daño por cada frame.
+5. Prueba Remolí, hitboxes, el ciclo WALK y recuperación del arroz.
+
+**Siguiente fase:** sprites de ataque definitivos frame a frame, después de aprobar el ritmo y las mecánicas de este prototipo.

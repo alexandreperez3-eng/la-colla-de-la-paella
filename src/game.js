@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03D
+ LA COLLA DE LA PAELLA · PASO 03E
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -21,7 +21,7 @@
   const debugHitboxes = document.querySelector('#debug-hitboxes');
   const animationLabel = document.querySelector('#animation-label');
   const useNewWalk = document.querySelector('#walk-v2');
-  const useAttackSprite = document.querySelector('#attack-sprite');
+  const showSlashEffects = document.querySelector('#slash-effects');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -33,14 +33,11 @@
   // Versión corregida: el rostro procede del sprite IDLE aprobado.
   const walkV3Image = new Image();
   walkV3Image.src = 'assets/llaurador_walk_v3.png?v=03c3';
-  const attack1Image = new Image();
-  attack1Image.src = 'assets/llaurador_attack_1.png?v=03d';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
   const walkV2SpriteReady = () => walkV2Image.complete && walkV2Image.naturalWidth === 672 && walkV2Image.naturalHeight === 128;
   const walkV3SpriteReady = () => walkV3Image.complete && walkV3Image.naturalWidth === 672 && walkV3Image.naturalHeight === 128;
-  const attack1SpriteReady = () => attack1Image.complete && attack1Image.naturalWidth === 448 && attack1Image.naturalHeight === 128;
   // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
   // Si una imagen falla al cargar, se usa otra versión como respaldo.
   const walkImageSeleccionada = () => {
@@ -51,14 +48,13 @@
   };
   const IDLE_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4,fps:6});
   const WALK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:6,fps:9});
-  const ATTACK1_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
   const keys = {up:false, down:false, left:false, right:false};
-  // Máquina de estados: el personaje solo está en UNO de estos tres estados.
+  // Máquina de estados: cada personaje ocupa un estado en cada actualización.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
   const game = {
     player:{
       x:0,y:0,facing:1,walking:0,state:STATE.IDLE,stateTime:0,
-      impactDone:false,attackStep:1,comboQueued:false,specialCooldown:0,
+      impactDone:false,attackStep:1,queuedHits:0,specialCooldown:0,
       animationTime:0,lastAnimationState:STATE.IDLE
     },
     enemy:{x:config.ladron.x,y:config.ladron.y,hp:config.ladron.vida,flash:0},
@@ -76,7 +72,7 @@
     game.player.stateTime = 0;
     game.player.impactDone = false;
     game.player.attackStep = 1;
-    game.player.comboQueued = false;
+    game.player.queuedHits = 0;
     game.player.specialCooldown = 0;
     game.player.animationTime = 0;
     game.player.lastAnimationState = STATE.IDLE;
@@ -87,7 +83,7 @@
     game.collected = false;
     game.elapsed = 0;
     objective.textContent = '⚔️ Derrota al ladrón de entrenamiento';
-    status.textContent = 'Acércate, mira hacia él y encadena dos golpes.';
+    status.textContent = 'Acércate y pulsa COMBO hasta cuatro veces: izquierda, derecha, patada, doble cruzado.';
     stateLabel.textContent = 'Estado: IDLE';
     comboLabel.textContent = 'Combo: —';
     specialStatus.textContent = 'REMOLÍ';
@@ -100,14 +96,18 @@
   speedInput.addEventListener('input',()=>{speedValue.textContent=speedInput.value;});
   document.querySelector('#reset').addEventListener('click',reset);
 
-  // El segundo toque durante ATTACK 1 encola el segundo tajo.
+  // Una pulsación inicia el primer golpe; las siguientes se guardan (máximo tres).
+  // La cola permite completar el combo incluso tocando el botón rápidamente.
   function startAttack() {
     const p=game.player;
     if(game.collected || p.state===STATE.SPECIAL || game.enemy.hp===0)return;
+    const movimientos=config.ataque.movimientos;
     if(p.state===STATE.ATTACK){
-      if(p.attackStep===1 && !p.comboQueued){
-        p.comboQueued=true;
-        status.textContent='¡Segundo tajo preparado!';
+      const antes=p.queuedHits;
+      p.queuedHits=Combo.encolar(p.attackStep,p.queuedHits,movimientos.length);
+      if(p.queuedHits>antes){
+        const siguiente=p.attackStep+p.queuedHits;
+        status.textContent='En cola: '+movimientos[siguiente-1].nombre;
       }
       return;
     }
@@ -115,8 +115,8 @@
     p.stateTime=0;
     p.impactDone=false;
     p.attackStep=1;
-    p.comboQueued=false;
-    status.textContent='¡Primer tajo!';
+    p.queuedHits=0;
+    status.textContent='¡'+movimientos[0].nombre+'!';
   }
 
   // La técnica circular no necesita mirar hacia el enemigo.
@@ -174,13 +174,17 @@
     const p=game.player,e=game.enemy;
     if(e.hp<=0)return;
     const especial=p.state===STATE.SPECIAL;
-    const tecnica=especial ? config.especial :
-      (p.attackStep===1 ? config.ataque.primero : config.ataque.segundo);
+    const tecnica=especial ? config.especial : config.ataque.movimientos[p.attackStep-1];
     const acierta=especial ?
       Combat.circular(p,e,config.especial.radio) :
-      Combat.frontal(p,e,config.ataque.alcance,config.ataque.profundidad,
+      Combat.frontal(p,e,tecnica.alcance,config.ataque.profundidad,
         config.ladron.semiancho,config.ladron.semiprofundidad);
     if(acierta){
+      if(!especial && tecnica.retroceso){
+        e.x=clamp(e.x+p.facing*tecnica.retroceso,
+          config.limites.izquierda+config.ladron.semiancho,
+          config.limites.derecha-config.ladron.semiancho);
+      }
       e.hp=Math.max(0,e.hp-tecnica.dano);
       e.flash=0.18;
       status.textContent=e.hp>0
@@ -206,21 +210,25 @@
       if(p.state===STATE.ATTACK || p.state===STATE.SPECIAL){
         p.stateTime+=delta;
         const tecnica=p.state===STATE.SPECIAL ? config.especial :
-          (p.attackStep===1 ? config.ataque.primero : config.ataque.segundo);
+          config.ataque.movimientos[p.attackStep-1];
         if(!p.impactDone && p.stateTime>=tecnica.impacto){
           p.impactDone=true;
           aplicarImpacto();
         }
         if(p.stateTime>=tecnica.duracion){
-          if(p.state===STATE.ATTACK && p.attackStep===1 && p.comboQueued){
-            p.attackStep=2;
-            p.comboQueued=false;
+          const siguiente=p.state===STATE.ATTACK
+            ? Combo.siguiente(p.attackStep,p.queuedHits,config.ataque.movimientos.length)
+            : null;
+          if(siguiente){
+            p.attackStep=siguiente.paso;
+            p.queuedHits=siguiente.enCola;
             p.impactDone=false;
             p.stateTime=0;
-            status.textContent='¡Segundo tajo con la otra corbella!';
+            status.textContent='¡'+config.ataque.movimientos[p.attackStep-1].nombre+'!';
           }else{
             p.state=STATE.IDLE;
             p.stateTime=0;
+            p.queuedHits=0;
           }
         }
       }else{
@@ -261,9 +269,10 @@
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
       const version=useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior';
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
-    }else if(p.state===STATE.ATTACK && p.attackStep===1 && useAttackSprite.checked && attack1SpriteReady()){
-      const frame=Animacion.frameUnico(p.stateTime,config.ataque.primero.duracion,ATTACK1_SPRITE.cantidad);
-      animationLabel.textContent='Sprite: ATTACK 1 nuevo '+(frame+1)+'/4';
+    }else if(p.state===STATE.ATTACK){
+      const tecnica=config.ataque.movimientos[p.attackStep-1];
+      const frame=Animacion.frameUnico(p.stateTime,tecnica.duracion,4);
+      animationLabel.textContent='COMBO '+p.attackStep+'/4 · '+tecnica.nombre+' · fase '+(frame+1)+'/4';
     }else{
       animationLabel.textContent='Sprite: '+p.state+' (provisional)';
     }
@@ -271,7 +280,7 @@
     coordinates.textContent=`Posición: ${Math.round(p.x)}, ${Math.round(p.y)}`;
     stateLabel.textContent='Estado: '+p.state+(p.state===STATE.ATTACK?' '+p.attackStep:'');
     comboLabel.textContent=p.state===STATE.ATTACK ?
-      (p.comboQueued?'Combo: 2.º en cola':'Combo: '+p.attackStep+'/2'):'Combo: —';
+      'Combo: '+p.attackStep+'/4'+(p.queuedHits?' · '+p.queuedHits+' en cola':'') : 'Combo: —';
   }
 
   const rect=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
@@ -357,35 +366,75 @@
     ctx.restore();
   }
 
+  // Estelas provisionales: el barrido es curvo, no un empuje recto del brazo.
+  // Se dibujan sobre IDLE para mantener el rostro, la paleta y las dos corbelles.
+  function drawComboEffects(p){
+    const tecnica=config.ataque.movimientos[p.attackStep-1];
+    const fase=clamp(p.stateTime/tecnica.duracion,0,1);
+    const intensidad=clamp((fase-0.12)*9,0,1)*clamp((0.92-fase)*7,0,1);
+    ctx.save();
+    ctx.lineCap='round';
+    if(p.attackStep===3){
+      // Pierna adelantada: patada frontal con espardenya visible.
+      const extension=Math.sin(fase*Math.PI)*48;
+      ctx.strokeStyle='#3e4655';ctx.lineWidth=17;
+      ctx.beginPath();ctx.moveTo(12,-43);
+      ctx.quadraticCurveTo(38,-23,48+extension,-43);ctx.stroke();
+      ctx.strokeStyle='#e8c98f';ctx.lineWidth=10;
+      ctx.beginPath();ctx.moveTo(43+extension,-44);ctx.lineTo(58+extension,-44);ctx.stroke();
+    }
+    if(showSlashEffects.checked && intensidad>0){
+      function estela(x0,y0,cx,cy,x1,y1,color){
+        ctx.save();ctx.globalAlpha=intensidad;
+        ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo(cx,cy,x1,y1);
+        ctx.strokeStyle=color;ctx.lineWidth=16;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo(cx,cy,x1,y1);
+        ctx.strokeStyle='#fff9e5';ctx.lineWidth=5;ctx.stroke();
+        ctx.restore();
+      }
+      if(p.attackStep===1){
+        estela(40,-135,135,-120,111,-48,'#efbb62');
+      }else if(p.attackStep===2){
+        estela(31,-47,139,-47,111,-133,'#9fe2dd');
+      }else if(p.attackStep===3){
+        estela(70,-80,119,-64,99,-35,'#f1d5a1');
+      }else{
+        estela(30,-133,96,-103,128,-46,'#f0c374');
+        estela(29,-45,97,-78,129,-130,'#b4ece5');
+        ctx.globalAlpha=intensidad;
+        ctx.fillStyle='#fffce8';
+        ctx.beginPath();ctx.arc(88,-89,10,0,2*Math.PI);ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
   function drawPlayer(){
     const p=game.player;
 
-    // IDLE, WALK y ATTACK 1 experimental usan sprites; ATTACK 2 y SPECIAL siguen en Canvas.
-    // Conservamos el mismo rectángulo y punto de anclaje en ambos estados,
-    // de manera que el cambio de animación no mueve al personaje de lugar.
+    // Los cuatro ataques parten del IDLE aprobado: la cara y el escuradents NO cambian.
+    // Las estelas y la patada son animaciones Canvas provisionales sobre este sprite.
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
+    const usingCombo=p.state===STATE.ATTACK && idleSpriteReady();
     const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
-    const usingAttack1=p.state===STATE.ATTACK && p.attackStep===1 && useAttackSprite.checked && attack1SpriteReady();
-    if(usingIdle || usingWalk || usingAttack1){
-      const sprite=usingIdle?IDLE_SPRITE:(usingAttack1?ATTACK1_SPRITE:WALK_SPRITE);
-      const imagen=usingIdle?idleImage:(usingAttack1?attack1Image:walkImageSeleccionada());
+    if(usingIdle || usingWalk || usingCombo){
+      const sprite=usingWalk?WALK_SPRITE:IDLE_SPRITE;
+      const imagen=usingWalk?walkImageSeleccionada():idleImage;
       if(!imagen.complete || imagen.naturalWidth !== sprite.ancho*sprite.cantidad)return;
-      const fps=usingIdle?IDLE_SPRITE.fps:
-        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
-      // ATTACK no se repite: avanza hasta el último fotograma y termina.
-      const frame=usingAttack1?
-        Animacion.frameUnico(p.stateTime,config.ataque.primero.duracion,sprite.cantidad):
-        Animacion.frame(p.animationTime,fps,sprite.cantidad);
+      const fps=usingWalk?
+        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):IDLE_SPRITE.fps;
+      const frame=usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
-      // La posición del jugador está en los pies; el sprite se dibuja arriba.
-      ctx.drawImage(
-        imagen,
-        frame*sprite.ancho,0,
-        sprite.ancho,sprite.alto,
-        -64,-148,128,148
-      );
+      if(usingCombo){
+        const tecnica=config.ataque.movimientos[p.attackStep-1];
+        const fase=Math.min(1,p.stateTime/tecnica.duracion);
+        ctx.translate(Math.sin(fase*Math.PI)*4,0);
+      }
+      // Mismo rectángulo, escala y punto de apoyo en pies para todas las poses.
+      ctx.drawImage(imagen,frame*sprite.ancho,0,sprite.ancho,sprite.alto,-64,-148,128,148);
+      if(usingCombo)drawComboEffects(p);
       ctx.restore();
       ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
       ctx.fillText('LLAURADOR',p.x,p.y-159);
@@ -397,7 +446,7 @@
     const breath=state===STATE.IDLE?Math.sin(game.elapsed*4)*2:0;
     const active=state===STATE.ATTACK || state===STATE.SPECIAL;
     const cfg=state===STATE.SPECIAL?config.especial:
-      (p.attackStep===1?config.ataque.primero:config.ataque.segundo);
+      config.ataque.movimientos[p.attackStep-1];
     const phase=active?Math.min(p.stateTime/cfg.duracion,1):0;
     const bend=active?Math.sin(phase*Math.PI)*6:0;
 
@@ -434,9 +483,9 @@
     ctx.strokeStyle='#e3b587';ctx.lineWidth=11;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(-13,-72);ctx.lineTo(-37,-49);ctx.stroke();
     ctx.beginPath();ctx.moveTo(15,-73);ctx.lineTo(53+bend,-51);ctx.stroke();
-    const rotationOne=state===STATE.ATTACK && p.attackStep===1 ?
+    const rotationOne=state===STATE.ATTACK && (p.attackStep===2 || p.attackStep===4) ?
       -0.85+phase*2.35 : (state===STATE.SPECIAL?phase*Math.PI*3:-0.15);
-    const rotationTwo=state===STATE.ATTACK && p.attackStep===2 ?
+    const rotationTwo=state===STATE.ATTACK && (p.attackStep===1 || p.attackStep===4) ?
       0.85-phase*2.35 : (state===STATE.SPECIAL?-phase*Math.PI*3:0.18);
     drawCorbella(55+bend,-47,rotationOne,1);
     drawCorbella(-37,-44,rotationTwo,-1);
@@ -445,7 +494,9 @@
       ctx.strokeStyle='#ffe5a2';ctx.lineWidth=5;
       ctx.beginPath();
       if(p.attackStep===1)ctx.arc(45,-58,57,-1.0,1.0);
-      else ctx.arc(-29,-56,53,2.2,4.3);
+      else if(p.attackStep===2)ctx.arc(-29,-56,53,2.2,4.3);
+      else if(p.attackStep===3)ctx.arc(62,-40,35,-1.0,0.8);
+      else {ctx.moveTo(15,-125);ctx.lineTo(108,-47);ctx.moveTo(15,-47);ctx.lineTo(108,-125);}
       ctx.stroke();
     }else if(state===STATE.SPECIAL){
       ctx.strokeStyle='#d8faf1';ctx.lineWidth=5;
