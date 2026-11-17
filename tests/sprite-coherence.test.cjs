@@ -13,7 +13,8 @@ function decode(path){
     if(t==='IEND')break;
   }
   const raw=zlib.inflateSync(Buffer.concat(chunks));
-  const rgba=new Uint8Array(w*h*4),prev=Buffer.alloc(w);
+  const rgba=new Uint8Array(w*h*4);
+  let prev=Buffer.alloc(w);
   let k=0,tot=[0,0,0],n=0;
   for(let y=0;y<h;y++){
     const filter=raw[k++],line=Buffer.alloc(w);
