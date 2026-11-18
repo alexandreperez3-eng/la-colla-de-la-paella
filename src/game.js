@@ -50,19 +50,13 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
-  // 03P: reconstruido a partir de las poses originales del pack 03J,
-  // no de un personaje regenerado. 03M permanece para comparar.
-  const faithfulDescendingImage = new Image();
-  faithfulDescendingImage.src = 'assets/llaurador_remate_desde_idle_03p.png?v=03p';
+  // 03P: en lugar de copiar los píxeles a otro PNG, dibujamos literalmente
+  // desde el MISMO atlas 03J que utiliza IDLE y los tres primeros ataques.
+  // Con ello la paleta nunca cambia al ejecutar el remate.
   const descendingImage = new Image();
   descendingImage.src = 'assets/llaurador_remate_descendente_03m.png?v=03m';
-  const imageReady = image => image.complete &&
-    image.naturalWidth === 832 && image.naturalHeight === 160;
-  const faithfulReady = () => imageReady(faithfulDescendingImage);
-  const descendingReady = () => imageReady(descendingImage) || faithfulReady();
-  const descendingSelectedImage = () =>
-    useFaithfulFinisher.checked && faithfulReady() ? faithfulDescendingImage :
-    imageReady(descendingImage) ? descendingImage : faithfulDescendingImage;
+  const descendingReady = () => descendingImage.complete &&
+    descendingImage.naturalWidth === 832 && descendingImage.naturalHeight === 160;
   // El efecto X es una capa separada del cuerpo para que el remate corte
   // por DELANTE del llaurador y no le atraviese el pecho o los pantalones.
   const crossForwardEffectImage = new Image();
@@ -523,7 +517,9 @@
         (usingWalk?WALK_SPRITE:
         (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:
         (usingKick?KICK_SPRITE:IDLE_SPRITE))));
-      const imagen=usingDescending?descendingSelectedImage():
+      const usingFiel=usingDescending && useFaithfulFinisher.checked;
+      const imagen=usingFiel?unifiedPackImage:
+        usingDescending?descendingImage:
         (usingPackIdle || usingPackAttack)?unifiedPackImage:
         (usingWalk?walkImageSeleccionada():
         (usingLeft?leftAttackImage:(usingRight?rightAttackImage:
@@ -556,7 +552,11 @@
       }
       // Pack 4x4: la fila es el ataque, la columna es el frame.
       // El mismo anclaje de pies se aplica a todas las poses.
-      const origenY=usingDescending?0:(usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0);
+      const rematePose=usingFiel?Remate.pose(frame):null;
+      const origenY=rematePose?rematePose.fila*COMBO_PACK.alto:
+        (usingDescending?0:(usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0));
+      const origenX=rematePose?rematePose.columna*COMBO_PACK.ancho:
+        frame*sprite.ancho;
       const destX=(usingPackIdle || usingPackAttack)?-100:(usingKick?-66:-64);
       const destY=(usingPackIdle || usingPackAttack)?-150:-148;
       const destWidth=(usingPackIdle || usingPackAttack)?208:(usingKick?164:128);
@@ -576,8 +576,13 @@
         ctx.scale(aire.escalaX,aire.escalaY);
         ctx.translate(0,-sueloLocal);
       }
-      ctx.drawImage(imagen,visualFrame*sprite.ancho,origenY,
+      ctx.drawImage(imagen,rematePose?origenX:visualFrame*sprite.ancho,origenY,
         sprite.ancho,sprite.alto,destX,destY,destWidth,destHeight);
+      if(rematePose && frame===2){
+        // Las dos trayectorias descendentes se dibujan en coordenadas del héroe.
+        // El cuerpo, la cabeza, el sombrero y los pantalones son los del atlas 03J.
+        Remate.dibujarEstelas(ctx);
+      }
       if(drawForwardX){
         // En coords locales: +X es delante. ctx.scale(facing,1)
         // coloca el mismo golpe delante también cuando mira a la izquierda.

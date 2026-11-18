@@ -173,12 +173,12 @@ La casilla «Impacto reforzado (comparar)» permite activar y desactivar el feed
 Solo se aplica cuando el jugador está en `IDLE` con «Pack unificado» activado. Caminar y atacar no cambian, ni tampoco daño, hitboxes o tiempos. Al desactivar el pack, permanece disponible el IDLE anterior de cuatro fotogramas. `tests/idle-breathing.test.cjs` comprueba periodicidad, límites de movimiento y el punto de anclaje.
 
 
-## Paso 03P — Remate coherente con el IDLE original
+## Paso 03P — Remate basado en el atlas real 03J (sin nueva paleta)
 
-Se añade `assets/llaurador_remate_desde_idle_03p.png` (832×160, cuatro poses). **No se ha generado otro llaurador**: la pose inicial es una copia exacta del IDLE de la tanda 03J y las poses siguientes se han compuesto a partir de la corbellada derecha y la secuencia de brazos del mismo pack artístico 03J; únicamente el efecto dorado descendente se extrae del remate 03M. No se superponen rostros ni se modifican colores de ropa ni pantalones.
+Las pruebas detectaron que copiar los fotogramas desde un PNG local introducía diferencias cromáticas con el **atlas exacto que está publicado**. Se descartó esa versión y se corrigió de raíz: cuando activamos «Remate con el llaurador original (03P)», Canvas utiliza **el mismo objeto `unifiedPackImage`**, cargado desde `assets/llaurador_combo_pack_03j.png`, para dibujar todas las poses del cuarto ataque.
 
-**Limitación visual:** esta reconstrucción prioriza la identidad del personaje; la preparación muestra una corbella más alta que la otra y en el impacto ambas manos se proyectan hacia delante, pero no equivale a una nueva ilustración completamente articulada de los dos brazos bajando simétricamente. Debe valorarse jugando si la trayectoria resulta convincente.
+`src/remate.js` selecciona cuatro poses del atlas original: reposo idéntico, corbellada alzada, brazos proyectados hacia delante, recuperación. Solo las dos estelas doradas descendentes se trazan por separado delante del personaje en el frame de impacto. No se generan nuevos píxeles de piel, sombrero, pantalón o rostro ni se recolorea el atlas.
 
-La casilla **«Remate con el llaurador original (03P)»**, activada por defecto, permite comparar con el remate regenerado 03M al desactivarla. Si el nuevo recurso no carga, se muestra el 03M. La casilla del remate descendente sigue permitiendo alternar con el antiguo cuarto golpe. Se mantienen el efecto contundente 03N, la animación respiratoria 03O, los tres primeros ataques y todas las reglas de combate.
+La casilla «Remate con el llaurador original (03P)» viene activada; al desactivarla puedes comparar con el remate generado 03M (que permanece intacto). Los tiempos, daño, alcance, retroceso, el feedback 03N, la respiración 03O y los otros tres golpes no cambian.
 
-La prueba `tests/sprite-remate-idle.test.cjs` verifica las cuatro celdas, los pies, los márgenes, la transparencia y la coincidencia de silueta y colores de la primera pose con el IDLE real del atlas 03J.
+**Limitación artística:** la pose de preparación eleva una corbella más que la otra y la pose de impacto viene de una animación distinta del mismo pack: puede requerir refinamiento del movimiento de los brazos. El objetivo de esta versión es resolver la identidad visual del personaje *sin volver a generarlo*.
