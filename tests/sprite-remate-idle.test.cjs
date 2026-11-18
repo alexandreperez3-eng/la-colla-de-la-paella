@@ -85,6 +85,7 @@ for(let n=0;n<4;n++){
   assert.equal(borders[n],0,'sin recorte '+n);
 }
 assert(silhouetteEqual>=.998*208*160,'el reposo comparte la silueta real del pack');
+console.log('Diagnóstico paleta IDLE', {nearColor,referenceOpaque,porcentaje:100*nearColor/referenceOpaque,silhouetteEqual});
 assert(nearColor>=referenceOpaque*.94,'el reposo mantiene la paleta del pack');
 assert(golden>150,'el remate dibuja su doble estela por delante');
 const game=fs.readFileSync('src/game.js','utf8');
