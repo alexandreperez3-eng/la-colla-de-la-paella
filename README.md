@@ -171,3 +171,14 @@ La casilla «Impacto reforzado (comparar)» permite activar y desactivar el feed
 **Corrección:** se mantiene exactamente el mismo sprite del pack unificado, pero `Animacion.respiracionIdle(t)` modula suavemente la altura (±1,8 %) y anchura (±0,4 %) de la pose a lo largo de 2,4 segundos. Se realiza en Canvas con el punto de pivote en la base del sprite para que los pies permanezcan plantados. El movimiento vuelve a empezar sin saltos y no modifica el archivo PNG.
 
 Solo se aplica cuando el jugador está en `IDLE` con «Pack unificado» activado. Caminar y atacar no cambian, ni tampoco daño, hitboxes o tiempos. Al desactivar el pack, permanece disponible el IDLE anterior de cuatro fotogramas. `tests/idle-breathing.test.cjs` comprueba periodicidad, límites de movimiento y el punto de anclaje.
+
+
+## Paso 03P — Remate coherente con el IDLE original
+
+Se añade `assets/llaurador_remate_desde_idle_03p.png` (832×160, cuatro poses). **No se ha generado otro llaurador**: la pose inicial es una copia exacta del IDLE de la tanda 03J y las poses siguientes se han compuesto a partir de la corbellada derecha y la secuencia de brazos del mismo pack artístico 03J; únicamente el efecto dorado descendente se extrae del remate 03M. No se superponen rostros ni se modifican colores de ropa ni pantalones.
+
+**Limitación visual:** esta reconstrucción prioriza la identidad del personaje; la preparación muestra una corbella más alta que la otra y en el impacto ambas manos se proyectan hacia delante, pero no equivale a una nueva ilustración completamente articulada de los dos brazos bajando simétricamente. Debe valorarse jugando si la trayectoria resulta convincente.
+
+La casilla **«Remate con el llaurador original (03P)»**, activada por defecto, permite comparar con el remate regenerado 03M al desactivarla. Si el nuevo recurso no carga, se muestra el 03M. La casilla del remate descendente sigue permitiendo alternar con el antiguo cuarto golpe. Se mantienen el efecto contundente 03N, la animación respiratoria 03O, los tres primeros ataques y todas las reglas de combate.
+
+La prueba `tests/sprite-remate-idle.test.cjs` verifica las cuatro celdas, los pies, los márgenes, la transparencia y la coincidencia de silueta y colores de la primera pose con el IDLE real del atlas 03J.

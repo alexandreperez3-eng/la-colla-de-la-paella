@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03O
+ LA COLLA DE LA PAELLA · PASO 03P
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -27,6 +27,7 @@
   const useKickSprite = document.querySelector('#kick-sprite');
   const useUnifiedPack = document.querySelector('#combo-pack');
   const useDescendingFinisher = document.querySelector('#descendente-sprite');
+  const useFaithfulFinisher = document.querySelector('#remate-fiel');
   const strongImpact = document.querySelector('#strong-impact');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
@@ -49,11 +50,19 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
-  // Remate 03M: cuatro poses del lote más cercano al IDLE del pack, sin superponer rostros.
+  // 03P: reconstruido a partir de las poses originales del pack 03J,
+  // no de un personaje regenerado. 03M permanece para comparar.
+  const faithfulDescendingImage = new Image();
+  faithfulDescendingImage.src = 'assets/llaurador_remate_desde_idle_03p.png?v=03p';
   const descendingImage = new Image();
   descendingImage.src = 'assets/llaurador_remate_descendente_03m.png?v=03m';
-  const descendingReady = () => descendingImage.complete &&
-    descendingImage.naturalWidth === 832 && descendingImage.naturalHeight === 160;
+  const imageReady = image => image.complete &&
+    image.naturalWidth === 832 && image.naturalHeight === 160;
+  const faithfulReady = () => imageReady(faithfulDescendingImage);
+  const descendingReady = () => imageReady(descendingImage) || faithfulReady();
+  const descendingSelectedImage = () =>
+    useFaithfulFinisher.checked && faithfulReady() ? faithfulDescendingImage :
+    imageReady(descendingImage) ? descendingImage : faithfulDescendingImage;
   // El efecto X es una capa separada del cuerpo para que el remate corte
   // por DELANTE del llaurador y no le atraviese el pecho o los pantalones.
   const crossForwardEffectImage = new Image();
@@ -514,7 +523,7 @@
         (usingWalk?WALK_SPRITE:
         (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:
         (usingKick?KICK_SPRITE:IDLE_SPRITE))));
-      const imagen=usingDescending?descendingImage:
+      const imagen=usingDescending?descendingSelectedImage():
         (usingPackIdle || usingPackAttack)?unifiedPackImage:
         (usingWalk?walkImageSeleccionada():
         (usingLeft?leftAttackImage:(usingRight?rightAttackImage:
