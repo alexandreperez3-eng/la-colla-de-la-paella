@@ -22,6 +22,8 @@ window.CONFIG = {
     alcance: 116, // alcance frontal desde el origen del jugador
     profundidad: 38 // margen en carril Y; la hurtbox del enemigo añade su semiprofundidad
   },
+  // Parámetros visuales del remate; no alteran la hitbox ni el daño.
+  feedbackRemate: {pausa:0.075, sacudida:0.18, destello:0.18, amplitud:6},
   especial: {
     duracion: 0.75,
     impacto: 0.39,

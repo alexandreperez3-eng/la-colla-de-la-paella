@@ -155,3 +155,10 @@ El **cuarto ataque del pack 03J** utiliza este recurso cuando están activados �
 **La jugabilidad no cambia**: 0,45 s de duración, 0,20 s al impacto, 2 puntos de daño, 128 px de alcance y 38 px de retroceso; también se mantienen las colisiones y el buffer de entradas. La estela ya está dibujada en el fotograma 3 y se presenta frontalmente, sin superponer el antiguo efecto X.
 
 Se añade `tests/sprite-downslash-03m.test.cjs`: comprueba firma y tipo PNG, dimensiones, transparencia, ausencia de recorte en los cuatro bordes laterales, alineación de pies, mayor estela en el fotograma de impacto, conexión a `src/game.js` y sincronización con el golpe. **No sustituye la valoración visual jugando**: la continuidad exacta del personaje entre animaciones sigue siendo una cuestión artística que debe aprobarse en pantalla.
+
+
+## Paso 03N — Remate más intenso, sin cambiar sprites
+
+Conservamos el mismo PNG del doble tajo descendente y el resto del combo. Cuando el cuarto golpe conecta, añadimos un **hit-stop de 75 ms**, una **sacudida decreciente de 180 ms** (hasta 6 px), un **destello de impacto de 180 ms** en el punto de contacto y una breve prolongación del flash del enemigo. Ningún efecto cambia el daño, las hitboxes ni el momento de impacto.
+
+La casilla «Impacto reforzado (comparar)» permite activar y desactivar el feedback sin cambiar de sprite. Si el golpe falla, no se aplica ningún efecto de contacto. El código visual está en `src/feedback.js` y las pruebas puras en `tests/feedback.test.cjs`.

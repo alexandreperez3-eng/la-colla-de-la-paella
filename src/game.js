@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03M
+ LA COLLA DE LA PAELLA · PASO 03N
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -27,6 +27,7 @@
   const useKickSprite = document.querySelector('#kick-sprite');
   const useUnifiedPack = document.querySelector('#combo-pack');
   const useDescendingFinisher = document.querySelector('#descendente-sprite');
+  const strongImpact = document.querySelector('#strong-impact');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -101,10 +102,14 @@
     },
     enemy:{x:config.ladron.x,y:config.ladron.y,hp:config.ladron.vida,flash:0},
     collected:false,
-    elapsed:0
+    elapsed:0,
+    hitStop:0, shakeTime:0, burstTime:0, burstX:0, burstY:0
   };
   const clamp = (v,min,max) => Math.max(min,Math.min(max,v));
   useNewWalk.addEventListener('change',()=>{game.player.animationTime=0;});
+  strongImpact.addEventListener('change',()=>{
+    if(!strongImpact.checked){game.hitStop=0;game.shakeTime=0;game.burstTime=0;}
+  });
 
   function reset() {
     game.player.x = config.personaje.xInicial;
@@ -124,6 +129,11 @@
     game.enemy.flash = 0;
     game.collected = false;
     game.elapsed = 0;
+    game.hitStop = 0;
+    game.shakeTime = 0;
+    game.burstTime = 0;
+    game.burstX = 0;
+    game.burstY = 0;
     objective.textContent = '⚔️ Derrota al ladrón de entrenamiento';
     status.textContent = 'Acércate y pulsa COMBO hasta cuatro veces: izquierda, derecha, patada, doble descendente.';
     stateLabel.textContent = 'Estado: IDLE';
@@ -222,6 +232,8 @@
       Combat.frontal(p,e,tecnica.alcance,config.ataque.profundidad,
         config.ladron.semiancho,config.ladron.semiprofundidad);
     if(acierta){
+      // Punto del impacto anterior al retroceso, para anclar el destello.
+      const contactoX=e.x, contactoY=e.y-76;
       if(!especial && tecnica.retroceso){
         e.x=clamp(e.x+p.facing*tecnica.retroceso,
           config.limites.izquierda+config.ladron.semiancho,
@@ -229,6 +241,15 @@
       }
       e.hp=Math.max(0,e.hp-tecnica.dano);
       e.flash=0.18;
+      if(!especial && p.attackStep===4 && strongImpact.checked){
+        // Solo efectos: el cálculo del daño y de colisión permanece idéntico.
+        game.hitStop=config.feedbackRemate.pausa;
+        game.shakeTime=config.feedbackRemate.sacudida;
+        game.burstTime=config.feedbackRemate.destello;
+        game.burstX=contactoX;
+        game.burstY=contactoY;
+        e.flash=0.25;
+      }
       status.textContent=e.hp>0
         ? '¡Impacto! Al ladrón le quedan '+e.hp+' PV.'
         : '¡Ladrón derrotado! Ahora recupera el arroz.';
@@ -241,6 +262,10 @@
   function update(delta) {
     const p=game.player,e=game.enemy;
     game.elapsed+=delta;
+    const hold=Feedback.repartirDelta(delta,game.hitStop);
+    game.hitStop=hold.restante;
+    game.shakeTime=Math.max(0,game.shakeTime-delta);
+    game.burstTime=Math.max(0,game.burstTime-delta);
     e.flash=Math.max(0,e.flash-delta);
     p.specialCooldown=Math.max(0,p.specialCooldown-delta);
     specialStatus.textContent=p.specialCooldown>0 ?
@@ -250,7 +275,7 @@
 
     if(!game.collected){
       if(p.state===STATE.ATTACK || p.state===STATE.SPECIAL){
-        p.stateTime+=delta;
+        p.stateTime+=hold.accion;
         const tecnica=p.state===STATE.SPECIAL ? config.especial :
           config.ataque.movimientos[p.attackStep-1];
         if(!p.impactDone && p.stateTime>=tecnica.impacto){
@@ -652,11 +677,54 @@
     ctx.restore();
   }
 
+  function drawImpactBurst(){
+    if(!strongImpact.checked || game.burstTime<=0)return;
+    const dur=config.feedbackRemate.destello;
+    const progreso=1-game.burstTime/dur;
+    const brillo=Feedback.intensidad(game.burstTime,dur);
+    ctx.save();
+    ctx.translate(game.burstX,game.burstY);
+    ctx.globalAlpha=brillo*.9;
+    // Onda de contacto: sin daño ni colisiones adicionales.
+    ctx.strokeStyle='#fff7d6';
+    ctx.lineWidth=4-progreso*2.5;
+    ctx.beginPath();
+    ctx.ellipse(0,0,12+32*progreso,9+22*progreso,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.strokeStyle='#f5b54e';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.ellipse(0,0,6+21*progreso,5+14*progreso,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.lineCap='round';
+    for(let i=0;i<10;i++){
+      const a=i*Math.PI/5+.14;
+      const ux=Math.cos(a),uy=Math.sin(a);
+      const inicio=13+26*progreso,fin=inicio+10*(1-progreso)+4;
+      ctx.strokeStyle=i%2?'#fff5cc':'#ffc65d';
+      ctx.lineWidth=i%3===0?3:2;
+      ctx.beginPath();
+      ctx.moveTo(ux*inicio,uy*inicio);
+      ctx.lineTo(ux*fin,uy*fin);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function render(){
-    background();drawRice();
+    background();
+    ctx.save();
+    if(strongImpact.checked && game.shakeTime>0){
+      const offset=Feedback.sacudida(game.shakeTime,
+        config.feedbackRemate.sacudida,config.feedbackRemate.amplitud);
+      ctx.translate(offset.x,offset.y);
+    }
+    drawRice();
     // Renderizamos primero al personaje más alejado (eje Y).
     if(game.enemy.y<game.player.y){drawEnemy();drawPlayer();}else{drawPlayer();drawEnemy();}
+    drawImpactBurst();
     if(debugHitboxes.checked)drawHitboxes();
+    ctx.restore();
     if(game.collected){
       ctx.fillStyle='#183d36dd';ctx.fillRect(235,150,430,125);
       ctx.textAlign='center';ctx.fillStyle='#f8dc95';ctx.font='bold 31px system-ui';
