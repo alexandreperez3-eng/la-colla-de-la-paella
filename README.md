@@ -109,3 +109,20 @@ La revisión visual en navegador sigue siendo necesaria: el test no puede garant
 La composición facial del paso 03I dejó visibles restos de la cara anterior debajo de la copiada desde IDLE. Esta regresión visual se corrige retirando **por completo la capa de rostro superpuesto**, conservando las poses de las dos corbelladas, los recortes reparados y la paleta ajustada a IDLE.
 
 **Limitación consciente:** la expresión facial original del ataque todavía presenta pequeñas diferencias respecto al IDLE. No afirmamos que la identidad facial ya esté igualada: antes de volver a transferir la cabeza, necesitaremos un borrado y ensamblaje de máscaras correcto que no deje restos. Se ha priorizado eliminar la doble cara sin romper el resto del arte o el combate.
+
+
+## Paso 03J — Un solo atlas para los cuatro ataques (18 nov. 2026)
+
+Prueba visual con un **único spritesheet 4×4**, generado desde los cuatro movimientos en la misma tanda artística. El atlas real está en `assets/llaurador_combo_pack_03j.png` (832×640 píxeles, 16 celdas de 208×160, PNG con transparencia).
+
+- **Filas:** 0 corbellada izquierda, 1 corbellada derecha, 2 patada, 3 remate de las dos corbelles cruzadas.
+- **Columnas:** preparación, movimiento, impacto y recuperación.
+- La primera celda sirve también para **IDLE**, por lo que el reposo y los ataques comparten cara, escuradents, ropa, colores y escala. El IDLE del pack es una pose fija de momento.
+- **WALK todavía conserva su sprite anterior**, de modo que esta prueba valida principalmente la coherencia entre reposo y las cuatro animaciones de ataque.
+- La casilla **«Pack unificado: IDLE y 4 golpes (comparar)»** permite activar/desactivar toda la tanda. Los PNG antiguos siguen disponibles y sirven como respaldo cuando el pack está desactivado.
+- Los efectos de corte están dentro de los fotogramas nuevos; evitamos superponer ondas Canvas duplicadas. «Estelas de ataques anteriores» afecta a las animaciones antiguas.
+- La mecánica del combo, los daños, hitboxes, ventanas de impacto, buffer de entradas y Remolí **no se modifican**.
+- Los originales generados se recortaron, alinearon y optimizaron para Canvas; no se pegaron caras encima de otras.
+- `npm test` ejecuta también `tests/sprite-pack.test.cjs`, que valida las dieciséis celdas, su transparencia, los márgenes y las referencias de código.
+
+**Prueba manual:** activa el pack, pulsa cuatro veces COMBO, revisa la transición reposo-ataque y el remate X; desactiva el pack para comparar con las versiones previas.

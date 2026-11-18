@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03I.2
+ LA COLLA DE LA PAELLA · PASO 03J
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -25,6 +25,7 @@
   const useLeftSprite = document.querySelector('#left-sprite');
   const useRightSprite = document.querySelector('#right-sprite');
   const useKickSprite = document.querySelector('#kick-sprite');
+  const useUnifiedPack = document.querySelector('#combo-pack');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -42,6 +43,10 @@
   rightAttackImage.src = 'assets/llaurador_attack_derecha.png?v=03i2';
   const kickImage = new Image();
   kickImage.src = 'assets/llaurador_patada.png?v=03h';
+  // Un único atlas 4x4: filas izquierda, derecha, patada y remate en X.
+  // La celda 0,0 también proporciona el reposo del mismo lote artístico.
+  const unifiedPackImage = new Image();
+  unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
@@ -50,6 +55,7 @@
   const leftAttackSpriteReady = () => leftAttackImage.complete && leftAttackImage.naturalWidth === 448 && leftAttackImage.naturalHeight === 128;
   const rightAttackSpriteReady = () => rightAttackImage.complete && rightAttackImage.naturalWidth === 448 && rightAttackImage.naturalHeight === 128;
   const kickSpriteReady = () => kickImage.complete && kickImage.naturalWidth === 576 && kickImage.naturalHeight === 128;
+  const unifiedPackReady = () => unifiedPackImage.complete && unifiedPackImage.naturalWidth === 832 && unifiedPackImage.naturalHeight === 640;
   // OFF compara el WALK anterior (v2); ON usa el rostro corregido (v3).
   // Si una imagen falla al cargar, se usa otra versión como respaldo.
   const walkImageSeleccionada = () => {
@@ -64,6 +70,13 @@
   const RIGHT_ATTACK_SPRITE = Object.freeze({ancho:112,alto:128,cantidad:4});
   // La patada necesita celdas más anchas para que no se recorte la espardenya.
   const KICK_SPRITE = Object.freeze({ancho:144,alto:128,cantidad:4});
+  const COMBO_PACK = Object.freeze({ancho:208,alto:160,cantidad:4});
+  const COMBO_MARCAS = Object.freeze([
+    [0.035,config.ataque.movimientos[0].impacto,0.17],
+    [0.04,config.ataque.movimientos[1].impacto,0.19],
+    [0.06,config.ataque.movimientos[2].impacto,0.245],
+    [0.08,config.ataque.movimientos[3].impacto,0.33]
+  ]);
   const keys = {up:false, down:false, left:false, right:false};
   // Máquina de estados: cada personaje ocupa un estado en cada actualización.
   const STATE = Object.freeze({IDLE:'IDLE', WALK:'WALK', ATTACK:'ATTACK', SPECIAL:'SPECIAL'});
@@ -280,23 +293,26 @@
     const walkFps=clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
     if(p.state===STATE.IDLE){
       const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
-      animationLabel.textContent='Sprite: IDLE '+(frame+1)+'/4';
+      animationLabel.textContent=useUnifiedPack.checked && unifiedPackReady()
+        ? 'Sprite: IDLE del pack unificado' : 'Sprite: IDLE '+(frame+1)+'/4';
     }else if(p.state===STATE.WALK){
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
       const version=useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior';
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
     }else if(p.state===STATE.ATTACK){
       const tecnica=config.ataque.movimientos[p.attackStep-1];
+      const conPack=useUnifiedPack.checked && unifiedPackReady();
       const conSpriteIzq=p.attackStep===1 && useLeftSprite.checked && leftAttackSpriteReady();
       const conSpriteDer=p.attackStep===2 && useRightSprite.checked && rightAttackSpriteReady();
       const conSpritePatada=p.attackStep===3 && useKickSprite.checked && kickSpriteReady();
-      const conSprite=conSpriteIzq || conSpriteDer || conSpritePatada;
-      const marcas=conSpritePatada ? [0.06,tecnica.impacto,0.245] :
-        (conSpriteDer ? [0.04,tecnica.impacto,0.19] : [0.035,tecnica.impacto,0.17]);
+      const conSprite=conPack || conSpriteIzq || conSpriteDer || conSpritePatada;
+      const marcas=conPack ? COMBO_MARCAS[p.attackStep-1] :
+        (conSpritePatada ? [0.06,tecnica.impacto,0.245] :
+        (conSpriteDer ? [0.04,tecnica.impacto,0.19] : [0.035,tecnica.impacto,0.17]));
       const frame=conSprite
         ? Animacion.framePorMarcas(p.stateTime,marcas)
         : Animacion.frameUnico(p.stateTime,tecnica.duracion,4);
-      animationLabel.textContent=(conSprite?'Sprite · ':'Provisional · ')+
+      animationLabel.textContent=(conPack?'Pack único · ':(conSprite?'Sprite anterior · ':'Provisional · '))+
         'COMBO '+p.attackStep+'/4 · '+tecnica.nombre+' · fase '+(frame+1)+'/4';
     }else{
       animationLabel.textContent='Sprite: '+p.state+' (provisional)';
@@ -437,8 +453,11 @@
   function drawPlayer(){
     const p=game.player;
 
-    // Tajos y patada usan sprites propios; el remate cruzado sigue provisional.
-    // La selección visual no modifica ventanas de impacto, hitboxes ni daño.
+    // El pack utiliza una sola imagen para las cuatro fases y su reposo.
+    // Los recursos anteriores se conservan para comparar y como fallback.
+    const usePack=useUnifiedPack.checked && unifiedPackReady();
+    const usingPackIdle=usePack && p.state===STATE.IDLE;
+    const usingPackAttack=usePack && p.state===STATE.ATTACK;
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
     const usingLeft=p.state===STATE.ATTACK && p.attackStep===1
       && useLeftSprite.checked && leftAttackSpriteReady();
@@ -446,21 +465,35 @@
       && useRightSprite.checked && rightAttackSpriteReady();
     const usingKick=p.state===STATE.ATTACK && p.attackStep===3
       && useKickSprite.checked && kickSpriteReady();
-    const usingCombo=p.state===STATE.ATTACK && (idleSpriteReady() || usingLeft || usingRight || usingKick);
-    const usingWalk=p.state===STATE.WALK && (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
-    if(usingIdle || usingWalk || usingCombo){
-      const sprite=usingWalk?WALK_SPRITE:
-        (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:(usingKick?KICK_SPRITE:IDLE_SPRITE)));
-      const imagen=usingWalk?walkImageSeleccionada():
-        (usingLeft?leftAttackImage:(usingRight?rightAttackImage:(usingKick?kickImage:idleImage)));
-      if(!imagen.complete || imagen.naturalWidth !== sprite.ancho*sprite.cantidad)return;
+    const usingCombo=p.state===STATE.ATTACK &&
+      (usingPackAttack || idleSpriteReady() || usingLeft || usingRight || usingKick);
+    const usingWalk=p.state===STATE.WALK &&
+      (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
+    if(usingPackIdle || usingPackAttack || usingIdle || usingWalk || usingCombo){
+      const sprite=(usingPackIdle || usingPackAttack)?COMBO_PACK:
+        (usingWalk?WALK_SPRITE:
+        (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:
+        (usingKick?KICK_SPRITE:IDLE_SPRITE))));
+      const imagen=(usingPackIdle || usingPackAttack)?unifiedPackImage:
+        (usingWalk?walkImageSeleccionada():
+        (usingLeft?leftAttackImage:(usingRight?rightAttackImage:
+        (usingKick?kickImage:idleImage))));
+      if(!imagen.complete || imagen.naturalWidth !==
+        sprite.ancho*sprite.cantidad)return;
       const fps=usingWalk?
-        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):IDLE_SPRITE.fps;
+        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):
+        IDLE_SPRITE.fps;
       let frame;
-      if(usingLeft)frame=Animacion.framePorMarcas(p.stateTime,[0.035,config.ataque.movimientos[0].impacto,0.17]);
-      else if(usingRight)frame=Animacion.framePorMarcas(p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19]);
-      else if(usingKick)frame=Animacion.framePorMarcas(p.stateTime,[0.06,config.ataque.movimientos[2].impacto,0.245]);
-      else frame=usingCombo?0:Animacion.frame(p.animationTime,fps,sprite.cantidad);
+      if(usingPackAttack)frame=Animacion.framePorMarcas(
+        p.stateTime,COMBO_MARCAS[p.attackStep-1]);
+      else if(usingLeft)frame=Animacion.framePorMarcas(
+        p.stateTime,[0.035,config.ataque.movimientos[0].impacto,0.17]);
+      else if(usingRight)frame=Animacion.framePorMarcas(
+        p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19]);
+      else if(usingKick)frame=Animacion.framePorMarcas(
+        p.stateTime,[0.06,config.ataque.movimientos[2].impacto,0.245]);
+      else frame=(usingCombo || usingPackIdle)?0:
+        Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.scale(p.facing,1);
@@ -469,11 +502,17 @@
         const fase=Math.min(1,p.stateTime/tecnica.duracion);
         ctx.translate(Math.sin(fase*Math.PI)*4,0);
       }
-      // Patada: celda más ancha, misma altura y anclaje de los pies.
-      // El tercer fotograma coincide con el impacto y la extensión de pierna.
-      const destX=usingKick?-66:-64, destWidth=usingKick?164:128;
-      ctx.drawImage(imagen,frame*sprite.ancho,0,sprite.ancho,sprite.alto,destX,-148,destWidth,148);
-      if(usingCombo)drawComboEffects(p,usingKick);
+      // Pack 4x4: la fila es el ataque, la columna es el frame.
+      // El mismo anclaje de pies se aplica a todas las poses.
+      const origenY=usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0;
+      const destX=(usingPackIdle || usingPackAttack)?-100:(usingKick?-66:-64);
+      const destY=(usingPackIdle || usingPackAttack)?-150:-148;
+      const destWidth=(usingPackIdle || usingPackAttack)?208:(usingKick?164:128);
+      const destHeight=(usingPackIdle || usingPackAttack)?160:148;
+      ctx.drawImage(imagen,frame*sprite.ancho,origenY,
+        sprite.ancho,sprite.alto,destX,destY,destWidth,destHeight);
+      // En el pack las ondas ya están dibujadas: no duplicarlas sobre la hoja.
+      if(usingCombo && !usingPackAttack)drawComboEffects(p,usingKick);
       ctx.restore();
       ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
       ctx.fillText('LLAURADOR',p.x,p.y-159);
