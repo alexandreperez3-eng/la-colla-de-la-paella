@@ -47,7 +47,10 @@ assert(gold[0]<50,'sin estela en preparación');
 const game=fs.readFileSync('src/game.js','utf8');
 const html=fs.readFileSync('index.html','utf8');
 assert(game.includes('descendingImage')&&game.includes('usingDescending'),'sprite integrado');
-assert(game.includes('const origenY=usingDescending?0:'),'fila propia en origen');
+assert(game.includes('const origenY=rematePose?rematePose.fila*COMBO_PACK.alto:'),
+  'remate 03P selecciona la fila del atlas original');
+assert(game.includes('(usingDescending?0:(usingPackAttack?'),
+  'remate 03M mantiene la fila independiente cuando se compara');
 assert(game.includes('!usingDescending && frame===2'),'no se superpone X vieja');
 assert(html.includes('id="descendente-sprite"'),'selector de comparación');
 console.log('Remate descendente: PNG, 4 poses, pies, márgenes, impacto frontal y render OK.');

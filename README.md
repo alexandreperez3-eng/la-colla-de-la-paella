@@ -171,3 +171,14 @@ La casilla «Impacto reforzado (comparar)» permite activar y desactivar el feed
 **Corrección:** se mantiene exactamente el mismo sprite del pack unificado, pero `Animacion.respiracionIdle(t)` modula suavemente la altura (±1,8 %) y anchura (±0,4 %) de la pose a lo largo de 2,4 segundos. Se realiza en Canvas con el punto de pivote en la base del sprite para que los pies permanezcan plantados. El movimiento vuelve a empezar sin saltos y no modifica el archivo PNG.
 
 Solo se aplica cuando el jugador está en `IDLE` con «Pack unificado» activado. Caminar y atacar no cambian, ni tampoco daño, hitboxes o tiempos. Al desactivar el pack, permanece disponible el IDLE anterior de cuatro fotogramas. `tests/idle-breathing.test.cjs` comprueba periodicidad, límites de movimiento y el punto de anclaje.
+
+
+## Paso 03P — Remate basado en el atlas real 03J (sin nueva paleta)
+
+Las pruebas detectaron que copiar los fotogramas desde un PNG local introducía diferencias cromáticas con el **atlas exacto que está publicado**. Se descartó esa versión y se corrigió de raíz: cuando activamos «Remate con el llaurador original (03P)», Canvas utiliza **el mismo objeto `unifiedPackImage`**, cargado desde `assets/llaurador_combo_pack_03j.png`, para dibujar todas las poses del cuarto ataque.
+
+`src/remate.js` selecciona cuatro poses del atlas original: reposo idéntico, corbellada alzada, brazos proyectados hacia delante, recuperación. Solo las dos estelas doradas descendentes se trazan por separado delante del personaje en el frame de impacto. No se generan nuevos píxeles de piel, sombrero, pantalón o rostro ni se recolorea el atlas.
+
+La casilla «Remate con el llaurador original (03P)» viene activada; al desactivarla puedes comparar con el remate generado 03M (que permanece intacto). Los tiempos, daño, alcance, retroceso, el feedback 03N, la respiración 03O y los otros tres golpes no cambian.
+
+**Limitación artística:** la pose de preparación eleva una corbella más que la otra y la pose de impacto viene de una animación distinta del mismo pack: puede requerir refinamiento del movimiento de los brazos. El objetivo de esta versión es resolver la identidad visual del personaje *sin volver a generarlo*.
