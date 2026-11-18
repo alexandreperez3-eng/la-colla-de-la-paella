@@ -27,11 +27,12 @@ const game=fs.readFileSync('src/game.js','utf8'),
  html=fs.readFileSync('index.html','utf8');
 assert(game.includes("assets/llaurador_combo_pack_03j.png?v=03j"),
   'carga el atlas realmente publicado');
-assert(game.includes('const imagen=usingFiel?unifiedPackImage:'),
-  'el remate dibuja EXACTAMENTE el mismo recurso que IDLE');
+assert(game.includes('usingFiel?unifiedPackImage:') &&
+  game.includes('const imagen=usingNewIdle?idleGuardImage:'),
+  'el remate sigue reutilizando el atlas original aunque el reposo tenga sprites propios');
 assert(game.includes('const rematePose=usingFiel?Remate.pose(frame):null;'));
 assert(game.includes('Remate.dibujarEstelas(ctx)'));
-assert(html.includes('src/remate.js?v=03p'));
+assert(html.includes('src/remate.js?v=03q'));
 assert(html.includes('id="remate-fiel"'));
 assert(!game.includes('llaurador_remate_desde_idle_03p.png'),
   'sin copia recoloreada del personaje');
