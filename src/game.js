@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03P
+ LA COLLA DE LA PAELLA · PASO 03Q
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -50,6 +50,15 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
+  // Cuatro fotogramas de guardia y seis de marcha, ambos del lote aprobado.
+  const idleGuardImage = new Image();
+  idleGuardImage.src = 'assets/llaurador_idle_guardia_03q.png?v=03q';
+  const walkAlternadoImage = new Image();
+  walkAlternadoImage.src = 'assets/llaurador_walk_alternado_03q.png?v=03q';
+  const idleGuardReady = () => idleGuardImage.complete &&
+    idleGuardImage.naturalWidth === 832 && idleGuardImage.naturalHeight === 160;
+  const walkAlternadoReady = () => walkAlternadoImage.complete &&
+    walkAlternadoImage.naturalWidth === 1248 && walkAlternadoImage.naturalHeight === 160;
   // 03P: en lugar de copiar los píxeles a otro PNG, dibujamos literalmente
   // desde el MISMO atlas 03J que utiliza IDLE y los tres primeros ataques.
   // Con ello la paleta nunca cambia al ejecutar el remate.
@@ -88,6 +97,8 @@
   // La patada necesita celdas más anchas para que no se recorte la espardenya.
   const KICK_SPRITE = Object.freeze({ancho:144,alto:128,cantidad:4});
   const COMBO_PACK = Object.freeze({ancho:208,alto:160,cantidad:4});
+  const IDLE_GUARDIA_SPRITE = Object.freeze({ancho:208,alto:160,cantidad:4,fps:4});
+  const WALK_ALTERNADO_SPRITE = Object.freeze({ancho:208,alto:160,cantidad:6,fps:9});
   const COMBO_MARCAS = Object.freeze([
     [0.035,config.ataque.movimientos[0].impacto,0.17],
     [0.04,config.ataque.movimientos[1].impacto,0.19],
@@ -333,12 +344,18 @@
     // Caminar más rápido también acelera el ciclo, sin cambiar la velocidad del juego.
     const walkFps=clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14);
     if(p.state===STATE.IDLE){
-      const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
-      animationLabel.textContent=useUnifiedPack.checked && unifiedPackReady()
-        ? 'Sprite: IDLE · respirando' : 'Sprite: IDLE '+(frame+1)+'/4';
+      const guardiaNueva=useUnifiedPack.checked && idleGuardReady();
+      const frame=Animacion.frame(p.animationTime,
+        guardiaNueva?IDLE_GUARDIA_SPRITE.fps:IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
+      animationLabel.textContent=guardiaNueva
+        ? 'Sprite: IDLE guardia '+(frame+1)+'/4'
+        : (useUnifiedPack.checked && unifiedPackReady()
+          ? 'Sprite: IDLE · respirando' : 'Sprite: IDLE '+(frame+1)+'/4');
     }else if(p.state===STATE.WALK){
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
-      const version=useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior';
+      const nuevo=useUnifiedPack.checked && walkAlternadoReady();
+      const version=nuevo?'piernas alternas 03Q':
+        (useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior');
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
     }else if(p.state===STATE.ATTACK){
       const tecnica=config.ataque.movimientos[p.attackStep-1];
@@ -494,10 +511,11 @@
   function drawPlayer(){
     const p=game.player;
 
-    // El pack utiliza una sola imagen para las cuatro fases y su reposo.
-    // Los recursos anteriores se conservan para comparar y como fallback.
+    // El pack guarda versiones anteriores para comparación.
     const usePack=useUnifiedPack.checked && unifiedPackReady();
-    const usingPackIdle=usePack && p.state===STATE.IDLE;
+    const usingNewIdle=useUnifiedPack.checked && p.state===STATE.IDLE && idleGuardReady();
+    const usingPackIdle=usePack && p.state===STATE.IDLE && !usingNewIdle;
+    const usingNewWalk=useUnifiedPack.checked && p.state===STATE.WALK && walkAlternadoReady();
     const usingPackAttack=usePack && p.state===STATE.ATTACK;
     const usingDescending=usingPackAttack && p.attackStep===4 &&
       useDescendingFinisher.checked && descendingReady();
@@ -511,14 +529,18 @@
     const usingCombo=p.state===STATE.ATTACK &&
       (usingPackAttack || idleSpriteReady() || usingLeft || usingRight || usingKick);
     const usingWalk=p.state===STATE.WALK &&
-      (walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
-    if(usingPackIdle || usingPackAttack || usingIdle || usingWalk || usingCombo){
-      const sprite=(usingPackIdle || usingPackAttack)?COMBO_PACK:
+      (usingNewWalk || walkSpriteReady() || walkV2SpriteReady() || walkV3SpriteReady());
+    if(usingNewIdle || usingPackIdle || usingNewWalk || usingPackAttack || usingIdle || usingWalk || usingCombo){
+      const sprite=usingNewIdle?IDLE_GUARDIA_SPRITE:
+        usingNewWalk?WALK_ALTERNADO_SPRITE:
+        (usingPackIdle || usingPackAttack)?COMBO_PACK:
         (usingWalk?WALK_SPRITE:
         (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:
         (usingKick?KICK_SPRITE:IDLE_SPRITE))));
       const usingFiel=usingDescending && useFaithfulFinisher.checked;
-      const imagen=usingFiel?unifiedPackImage:
+      const imagen=usingNewIdle?idleGuardImage:
+        usingNewWalk?walkAlternadoImage:
+        usingFiel?unifiedPackImage:
         usingDescending?descendingImage:
         (usingPackIdle || usingPackAttack)?unifiedPackImage:
         (usingWalk?walkImageSeleccionada():
@@ -527,8 +549,9 @@
       if(!imagen.complete || imagen.naturalWidth !==
         sprite.ancho*sprite.cantidad)return;
       const fps=usingWalk?
-        clamp(WALK_SPRITE.fps*Number(speedInput.value)/config.personaje.velocidad,5,14):
-        IDLE_SPRITE.fps;
+        clamp((usingNewWalk?WALK_ALTERNADO_SPRITE.fps:WALK_SPRITE.fps)*
+          Number(speedInput.value)/config.personaje.velocidad,5,14):
+        (usingNewIdle?IDLE_GUARDIA_SPRITE.fps:IDLE_SPRITE.fps);
       let frame;
       if(usingPackAttack)frame=Animacion.framePorMarcas(
         p.stateTime,COMBO_MARCAS[p.attackStep-1]);
@@ -557,10 +580,11 @@
         (usingDescending?0:(usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0));
       const origenX=rematePose?rematePose.columna*COMBO_PACK.ancho:
         frame*sprite.ancho;
-      const destX=(usingPackIdle || usingPackAttack)?-100:(usingKick?-66:-64);
-      const destY=(usingPackIdle || usingPackAttack)?-150:-148;
-      const destWidth=(usingPackIdle || usingPackAttack)?208:(usingKick?164:128);
-      const destHeight=(usingPackIdle || usingPackAttack)?160:148;
+      const celdaAncha=usingNewIdle || usingNewWalk || usingPackIdle || usingPackAttack;
+      const destX=celdaAncha?-100:(usingKick?-66:-64);
+      const destY=celdaAncha?-150:-148;
+      const destWidth=celdaAncha?208:(usingKick?164:128);
+      const destHeight=celdaAncha?160:148;
       // El nuevo remate se dibuja con dos brazos y doble estela descendente.
       // El efecto X 03K queda solo para comparar la animación antigua.
       const drawForwardX=usingPackAttack && p.attackStep===4 &&
