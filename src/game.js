@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03N
+ LA COLLA DE LA PAELLA · PASO 03O
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -332,7 +332,7 @@
     if(p.state===STATE.IDLE){
       const frame=Animacion.frame(p.animationTime,IDLE_SPRITE.fps,IDLE_SPRITE.cantidad);
       animationLabel.textContent=useUnifiedPack.checked && unifiedPackReady()
-        ? 'Sprite: IDLE del pack unificado' : 'Sprite: IDLE '+(frame+1)+'/4';
+        ? 'Sprite: IDLE · respirando' : 'Sprite: IDLE '+(frame+1)+'/4';
     }else if(p.state===STATE.WALK){
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
       const version=useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior';
@@ -533,6 +533,8 @@
         p.stateTime,[0.04,config.ataque.movimientos[1].impacto,0.19]);
       else if(usingKick)frame=Animacion.framePorMarcas(
         p.stateTime,[0.06,config.ataque.movimientos[2].impacto,0.245]);
+      // El pack unificado tiene una sola pose para IDLE: la animación
+      // respiratoria se calcula en Canvas, no seleccionando celdas idénticas.
       else frame=(usingCombo || usingPackIdle)?0:
         Animacion.frame(p.animationTime,fps,sprite.cantidad);
       ctx.save();
@@ -555,6 +557,16 @@
       const drawForwardX=usingPackAttack && p.attackStep===4 &&
         !usingDescending && frame===2 && crossForwardReady();
       const visualFrame=drawForwardX?1:frame;
+      if(usingPackIdle){
+        // Respiración continua con la MISMA pose del atlas 03J.
+        // El punto de apoyo son los pies (parte inferior del rectángulo):
+        // no se desplaza el jugador ni cambia la cara, la ropa o el sombrero.
+        const aire=Animacion.respiracionIdle(p.animationTime);
+        const sueloLocal=destY+destHeight;
+        ctx.translate(0,sueloLocal);
+        ctx.scale(aire.escalaX,aire.escalaY);
+        ctx.translate(0,-sueloLocal);
+      }
       ctx.drawImage(imagen,visualFrame*sprite.ancho,origenY,
         sprite.ancho,sprite.alto,destX,destY,destWidth,destHeight);
       if(drawForwardX){
