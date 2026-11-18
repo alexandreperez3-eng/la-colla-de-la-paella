@@ -12,12 +12,12 @@ window.CONFIG = {
   arroz: {x: 745, y: 369, radioRecogida: 53},
   ladron: {x: 530, y: 365, vida: 10, semiancho: 22, semiprofundidad: 14},
   ataque: {
-    // Cuatro pulsaciones: izquierda, derecha, patada, remate cruzado.
+    // Cuatro pulsaciones: izquierda, derecha, patada, remate descendente.
     movimientos: [
       {id:'izquierda', nombre:'Corbellada izquierda', duracion:0.25, impacto:0.09, dano:1, alcance:116},
       {id:'derecha', nombre:'Corbellada derecha', duracion:0.28, impacto:0.11, dano:1, alcance:116},
       {id:'patada', nombre:'Patada frontal', duracion:0.32, impacto:0.15, dano:1, alcance:95, retroceso:26},
-      {id:'cruzado', nombre:'Creuament de Corbelles', duracion:0.45, impacto:0.20, dano:2, alcance:128, retroceso:38}
+      {id:'descendente', nombre:'Doble corbellada descendent', duracion:0.45, impacto:0.20, dano:2, alcance:128, retroceso:38}
     ],
     alcance: 116, // alcance frontal desde el origen del jugador
     profundidad: 38 // margen en carril Y; la hurtbox del enemigo añade su semiprofundidad
