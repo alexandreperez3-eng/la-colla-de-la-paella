@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03L
+ LA COLLA DE LA PAELLA · PASO 03M
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -48,9 +48,9 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
-  // El nuevo remate descendente usa cuatro poses completas, incluida su estela.
+  // Remate 03M: cuatro poses del lote más cercano al IDLE del pack, sin superponer rostros.
   const descendingImage = new Image();
-  descendingImage.src = 'assets/llaurador_remate_descendente_03l.png?v=03l';
+  descendingImage.src = 'assets/llaurador_remate_descendente_03m.png?v=03m';
   const descendingReady = () => descendingImage.complete &&
     descendingImage.naturalWidth === 832 && descendingImage.naturalHeight === 160;
   // El efecto X es una capa separada del cuerpo para que el remate corte
