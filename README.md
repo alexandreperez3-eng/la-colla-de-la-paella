@@ -144,3 +144,14 @@ La casilla **«Remate descendente nuevo (comparar)»** está activada por defect
 El cuarto movimiento conserva **duración 0,45 s, impacto 0,20 s, daño 2, alcance 128 px y retroceso 38 px**; su identificador cambia a `descendente` y el nombre visible a «Doble corbellada descendent». El efecto X antiguo se omite cuando se muestra el sprite descendente. `tests/sprite-downslash.test.cjs` comprueba la estructura y los márgenes del PNG, la presencia del efecto delante y la conexión al código; la apariencia final debe valorarse visualmente.
 
 Para probarlo: activa ambas casillas, sitúate frente al ladrón y pulsa COMBO cuatro veces. Puedes desactivar únicamente la casilla de remate descendente para comparar. El Remolí especial, los tiempos y las hitboxes permanecen inalterados.
+
+
+## Paso 03M — Remate descendente del lote artístico coherente (18 nov. 2026)
+
+Se ha integrado como **recurso nuevo** `assets/llaurador_remate_descendente_03m.png` (832 × 160 px, cuatro fotogramas de 208 × 160, fondo transparente). Parte del boceto de doble corbellada descendente que se consideró más cercano al estilo de las tres primeras animaciones. Se han conservado sus poses, sus colores y la cara dibujada; **no se han superpuesto cabezas ni recoloreado partes**.
+
+El **cuarto ataque del pack 03J** utiliza este recurso cuando están activados «Pack unificado» y «Remate 03M · doble tajo descendente». Los tres primeros ataques, el IDLE y el WALK se dejan intactos. La versión anterior `03L` se conserva en GitHub para comparación e historial; la opción de desactivar el remate permite ver el cuarto golpe anterior (X).
+
+**La jugabilidad no cambia**: 0,45 s de duración, 0,20 s al impacto, 2 puntos de daño, 128 px de alcance y 38 px de retroceso; también se mantienen las colisiones y el buffer de entradas. La estela ya está dibujada en el fotograma 3 y se presenta frontalmente, sin superponer el antiguo efecto X.
+
+Se añade `tests/sprite-downslash-03m.test.cjs`: comprueba firma y tipo PNG, dimensiones, transparencia, ausencia de recorte en los cuatro bordes laterales, alineación de pies, mayor estela en el fotograma de impacto, conexión a `src/game.js` y sincronización con el golpe. **No sustituye la valoración visual jugando**: la continuidad exacta del personaje entre animaciones sigue siendo una cuestión artística que debe aprobarse en pantalla.
