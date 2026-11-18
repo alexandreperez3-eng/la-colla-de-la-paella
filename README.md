@@ -162,3 +162,12 @@ Se añade `tests/sprite-downslash-03m.test.cjs`: comprueba firma y tipo PNG, dim
 Conservamos el mismo PNG del doble tajo descendente y el resto del combo. Cuando el cuarto golpe conecta, añadimos un **hit-stop de 75 ms**, una **sacudida decreciente de 180 ms** (hasta 6 px), un **destello de impacto de 180 ms** en el punto de contacto y una breve prolongación del flash del enemigo. Ningún efecto cambia el daño, las hitboxes ni el momento de impacto.
 
 La casilla «Impacto reforzado (comparar)» permite activar y desactivar el feedback sin cambiar de sprite. Si el golpe falla, no se aplica ningún efecto de contacto. El código visual está en `src/feedback.js` y las pruebas puras en `tests/feedback.test.cjs`.
+
+
+## Paso 03O — IDLE respirando (pack unificado)
+
+**Causa del fallo:** en el pack 03J las cuatro copias del reposo son idénticas y el motor además utilizaba solo el primer fotograma. Recorrer celdas idénticas no recuperaría la animación.
+
+**Corrección:** se mantiene exactamente el mismo sprite del pack unificado, pero `Animacion.respiracionIdle(t)` modula suavemente la altura (±1,8 %) y anchura (±0,4 %) de la pose a lo largo de 2,4 segundos. Se realiza en Canvas con el punto de pivote en la base del sprite para que los pies permanezcan plantados. El movimiento vuelve a empezar sin saltos y no modifica el archivo PNG.
+
+Solo se aplica cuando el jugador está en `IDLE` con «Pack unificado» activado. Caminar y atacar no cambian, ni tampoco daño, hitboxes o tiempos. Al desactivar el pack, permanece disponible el IDLE anterior de cuatro fotogramas. `tests/idle-breathing.test.cjs` comprueba periodicidad, límites de movimiento y el punto de anclaje.
