@@ -6,7 +6,7 @@ vm.runInNewContext(fs.readFileSync('src/combo.js','utf8'),sandbox);
 vm.runInNewContext(fs.readFileSync('src/config.js','utf8'),sandbox);
 const Combo=sandbox.window.Combo;
 const pasos=sandbox.window.CONFIG.ataque.movimientos;
-assert.equal(pasos.map(p=>p.id).join(','),'izquierda,derecha,patada,cruzado');
+assert.equal(pasos.map(p=>p.id).join(','),'izquierda,derecha,patada,descendente');
 assert.equal(pasos.length,4);
 assert.equal(pasos.reduce((n,p)=>n+p.dano,0),5);
 for(const paso of pasos)assert(paso.duracion>paso.impacto && paso.impacto>0,paso.id+' impacto dentro del golpe');

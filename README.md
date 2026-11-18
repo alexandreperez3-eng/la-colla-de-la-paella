@@ -133,3 +133,14 @@ Prueba visual con un **único spritesheet 4×4**, generado desde los cuatro movi
 El impacto del cuarto ataque conserva **la misma hitbox, momento del impacto y daño**. En el fotograma de impacto, el torso se dibuja con la pose de brazos extendidos (frame 2) del mismo atlas 03J, mientras la onda X se extrae del arte original y se dibuja como una capa **delante de las corbelles**, sin tapar pecho o piernas. El efecto vive en `assets/llaurador_cruzado_onda_frontal.png`. No se ha movido el sprite completo ni las coordenadas del jugador. `ctx.scale(p.facing,1)` invierte tanto al personaje como la onda para mirar hacia ambos lados.
 
 La prueba `tests/sprite-cross-front.test.cjs` valida el formato y tamaño del efecto, la referencia del recurso y el posicionamiento frontal en Canvas. La valoración final del barrido sigue siendo visual, jugando.
+
+
+## Paso 03L — Doble corbellada descendent (remate aprobado)
+
+El cuarto golpe cambia de diseño: el llaurador levanta las dos corbelles y las descarga simultáneamente delante del cuerpo. La animación consta de cuatro poses transparentes en `assets/llaurador_remate_descendente_03l.png` (832 × 160 píxeles; cuatro celdas de 208 × 160). El tercer fotograma tiene la estela descendente delante del personaje.
+
+La casilla **«Remate descendente nuevo (comparar)»** está activada por defecto cuando está activo el pack 03J; al desactivarla reaparece la animación 03K del antiguo remate en X. Los tres primeros golpes y el reposo no se modifican.
+
+El cuarto movimiento conserva **duración 0,45 s, impacto 0,20 s, daño 2, alcance 128 px y retroceso 38 px**; su identificador cambia a `descendente` y el nombre visible a «Doble corbellada descendent». El efecto X antiguo se omite cuando se muestra el sprite descendente. `tests/sprite-downslash.test.cjs` comprueba la estructura y los márgenes del PNG, la presencia del efecto delante y la conexión al código; la apariencia final debe valorarse visualmente.
+
+Para probarlo: activa ambas casillas, sitúate frente al ladrón y pulsa COMBO cuatro veces. Puedes desactivar únicamente la casilla de remate descendente para comparar. El Remolí especial, los tiempos y las hitboxes permanecen inalterados.

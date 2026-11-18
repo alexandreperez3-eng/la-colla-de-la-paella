@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03K
+ LA COLLA DE LA PAELLA · PASO 03L
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -26,6 +26,7 @@
   const useRightSprite = document.querySelector('#right-sprite');
   const useKickSprite = document.querySelector('#kick-sprite');
   const useUnifiedPack = document.querySelector('#combo-pack');
+  const useDescendingFinisher = document.querySelector('#descendente-sprite');
   // Los sprites son recursos gráficos independientes de la máquina de estados.
   const idleImage = new Image();
   idleImage.src = 'assets/llaurador_idle.png?v=03b';
@@ -47,6 +48,11 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
+  // El nuevo remate descendente usa cuatro poses completas, incluida su estela.
+  const descendingImage = new Image();
+  descendingImage.src = 'assets/llaurador_remate_descendente_03l.png?v=03l';
+  const descendingReady = () => descendingImage.complete &&
+    descendingImage.naturalWidth === 832 && descendingImage.naturalHeight === 160;
   // El efecto X es una capa separada del cuerpo para que el remate corte
   // por DELANTE del llaurador y no le atraviese el pecho o los pantalones.
   const crossForwardEffectImage = new Image();
@@ -119,7 +125,7 @@
     game.collected = false;
     game.elapsed = 0;
     objective.textContent = '⚔️ Derrota al ladrón de entrenamiento';
-    status.textContent = 'Acércate y pulsa COMBO hasta cuatro veces: izquierda, derecha, patada, doble cruzado.';
+    status.textContent = 'Acércate y pulsa COMBO hasta cuatro veces: izquierda, derecha, patada, doble descendente.';
     stateLabel.textContent = 'Estado: IDLE';
     comboLabel.textContent = 'Combo: —';
     specialStatus.textContent = 'REMOLÍ';
@@ -465,6 +471,8 @@
     const usePack=useUnifiedPack.checked && unifiedPackReady();
     const usingPackIdle=usePack && p.state===STATE.IDLE;
     const usingPackAttack=usePack && p.state===STATE.ATTACK;
+    const usingDescending=usingPackAttack && p.attackStep===4 &&
+      useDescendingFinisher.checked && descendingReady();
     const usingIdle=p.state===STATE.IDLE && idleSpriteReady();
     const usingLeft=p.state===STATE.ATTACK && p.attackStep===1
       && useLeftSprite.checked && leftAttackSpriteReady();
@@ -481,7 +489,8 @@
         (usingWalk?WALK_SPRITE:
         (usingLeft?LEFT_ATTACK_SPRITE:(usingRight?RIGHT_ATTACK_SPRITE:
         (usingKick?KICK_SPRITE:IDLE_SPRITE))));
-      const imagen=(usingPackIdle || usingPackAttack)?unifiedPackImage:
+      const imagen=usingDescending?descendingImage:
+        (usingPackIdle || usingPackAttack)?unifiedPackImage:
         (usingWalk?walkImageSeleccionada():
         (usingLeft?leftAttackImage:(usingRight?rightAttackImage:
         (usingKick?kickImage:idleImage))));
@@ -511,16 +520,15 @@
       }
       // Pack 4x4: la fila es el ataque, la columna es el frame.
       // El mismo anclaje de pies se aplica a todas las poses.
-      const origenY=usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0;
+      const origenY=usingDescending?0:(usingPackAttack?(p.attackStep-1)*COMBO_PACK.alto:0);
       const destX=(usingPackIdle || usingPackAttack)?-100:(usingKick?-66:-64);
       const destY=(usingPackIdle || usingPackAttack)?-150:-148;
       const destWidth=(usingPackIdle || usingPackAttack)?208:(usingKick?164:128);
       const destHeight=(usingPackIdle || usingPackAttack)?160:148;
-      // En el impacto cruzado usamos la pose de brazos abiertos del frame 2
-      // (índice 1), SIN la X antigua que tapaba el torso en el índice 2.
-      // La X se dibuja como efecto independiente a la derecha del personaje.
+      // El nuevo remate se dibuja con dos brazos y doble estela descendente.
+      // El efecto X 03K queda solo para comparar la animación antigua.
       const drawForwardX=usingPackAttack && p.attackStep===4 &&
-        frame===2 && crossForwardReady();
+        !usingDescending && frame===2 && crossForwardReady();
       const visualFrame=drawForwardX?1:frame;
       ctx.drawImage(imagen,visualFrame*sprite.ancho,origenY,
         sprite.ancho,sprite.alto,destX,destY,destWidth,destHeight);
