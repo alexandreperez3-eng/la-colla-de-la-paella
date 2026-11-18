@@ -126,3 +126,10 @@ Prueba visual con un **único spritesheet 4×4**, generado desde los cuatro movi
 - `npm test` ejecuta también `tests/sprite-pack.test.cjs`, que valida las dieciséis celdas, su transparencia, los márgenes y las referencias de código.
 
 **Prueba manual:** activa el pack, pulsa cuatro veces COMBO, revisa la transición reposo-ataque y el remate X; desactiva el pack para comparar con las versiones previas.
+
+
+## Paso 03K — Doble corte cruzado delante del personaje
+
+El impacto del cuarto ataque conserva **la misma hitbox, momento del impacto y daño**. En el fotograma de impacto, el torso se dibuja con la pose de brazos extendidos (frame 2) del mismo atlas 03J, mientras la onda X se extrae del arte original y se dibuja como una capa **delante de las corbelles**, sin tapar pecho o piernas. El efecto vive en `assets/llaurador_cruzado_onda_frontal.png`. No se ha movido el sprite completo ni las coordenadas del jugador. `ctx.scale(p.facing,1)` invierte tanto al personaje como la onda para mirar hacia ambos lados.
+
+La prueba `tests/sprite-cross-front.test.cjs` valida el formato y tamaño del efecto, la referencia del recurso y el posicionamiento frontal en Canvas. La valoración final del barrido sigue siendo visual, jugando.

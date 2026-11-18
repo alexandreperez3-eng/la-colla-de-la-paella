@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03J
+ LA COLLA DE LA PAELLA · PASO 03K
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -47,6 +47,13 @@
   // La celda 0,0 también proporciona el reposo del mismo lote artístico.
   const unifiedPackImage = new Image();
   unifiedPackImage.src = 'assets/llaurador_combo_pack_03j.png?v=03j';
+  // El efecto X es una capa separada del cuerpo para que el remate corte
+  // por DELANTE del llaurador y no le atraviese el pecho o los pantalones.
+  const crossForwardEffectImage = new Image();
+  crossForwardEffectImage.src = 'assets/llaurador_cruzado_onda_frontal.png?v=03k';
+  const crossForwardReady = () => crossForwardEffectImage.complete &&
+    crossForwardEffectImage.naturalWidth === 122 &&
+    crossForwardEffectImage.naturalHeight === 84;
   // Si la imagen no carga, el personaje sigue visible con el dibujo Canvas de respaldo.
   const idleSpriteReady = () => idleImage.complete && idleImage.naturalWidth === 448 && idleImage.naturalHeight === 128;
   const walkSpriteReady = () => walkImage.complete && walkImage.naturalWidth === 672 && walkImage.naturalHeight === 128;
@@ -509,9 +516,21 @@
       const destY=(usingPackIdle || usingPackAttack)?-150:-148;
       const destWidth=(usingPackIdle || usingPackAttack)?208:(usingKick?164:128);
       const destHeight=(usingPackIdle || usingPackAttack)?160:148;
-      ctx.drawImage(imagen,frame*sprite.ancho,origenY,
+      // En el impacto cruzado usamos la pose de brazos abiertos del frame 2
+      // (índice 1), SIN la X antigua que tapaba el torso en el índice 2.
+      // La X se dibuja como efecto independiente a la derecha del personaje.
+      const drawForwardX=usingPackAttack && p.attackStep===4 &&
+        frame===2 && crossForwardReady();
+      const visualFrame=drawForwardX?1:frame;
+      ctx.drawImage(imagen,visualFrame*sprite.ancho,origenY,
         sprite.ancho,sprite.alto,destX,destY,destWidth,destHeight);
-      // En el pack las ondas ya están dibujadas: no duplicarlas sobre la hoja.
+      if(drawForwardX){
+        // En coords locales: +X es delante. ctx.scale(facing,1)
+        // coloca el mismo golpe delante también cuando mira a la izquierda.
+        // La X ocupa la región frontal del impacto, sin desplazar al héroe.
+        ctx.drawImage(crossForwardEffectImage,43,-111,105,75);
+      }
+      // El resto de ondas del pack ya vienen dibujadas en sus celdas.
       if(usingCombo && !usingPackAttack)drawComboEffects(p,usingKick);
       ctx.restore();
       ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';

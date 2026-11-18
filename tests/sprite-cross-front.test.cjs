@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const png=fs.readFileSync('assets/llaurador_cruzado_onda_frontal.png');
+assert(png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),'efecto PNG');
+assert.equal(png.readUInt32BE(16),122,'efecto con margen de seguridad horizontal');
+assert.equal(png.readUInt32BE(20),84,'efecto con margen de seguridad vertical');
+assert.equal(png[25],6,'PNG RGBA con transparencia');
+const src=fs.readFileSync('src/game.js','utf8');
+assert(src.includes('p.attackStep===4'),'solo para el remate cruzado');
+assert(src.includes('frame===2 && crossForwardReady()'),'solo en fotograma de impacto');
+assert(src.includes('const visualFrame=drawForwardX?1:frame'),'no dibuja la X antigua encima del torso');
+assert(src.includes('ctx.drawImage(crossForwardEffectImage,43,-111,105,75)'),'X dibujada delante');
+assert(src.includes('ctx.scale(p.facing,1)'),'espejado de izquierda a derecha');
+console.log('Remate cruzado: onda independiente delante del personaje, sin cambiar la hitbox.');
