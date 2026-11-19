@@ -212,3 +212,24 @@ Si la imagen tarda en cargar, se dibuja un Pèsol provisional en Canvas
 para evitar un enemigo invisible. La lógica del esbirro y las dimensiones
 del atlas tienen tests propios: `tests/pesol.test.cjs` y
 `tests/sprite-pesol-04a.test.cjs`.
+
+
+## Paso 04B — Pèsol Cabut: marcha alternada y limpieza de transparencia
+
+El nuevo atlas \`assets/pesol_cabut_atlas_04b.png\` conserva el formato
+**768 × 560, cinco filas × seis columnas (128 × 112 por celda)** del 04A.
+La fila de persecución sustituye las seis poses anteriores casi idénticas por
+seis pasos sacados de la hoja visual aprobada: alternancia de piernas, alzado
+de botas y ligero rebote. El tamaño y el apoyo de los pies están ajustados a
+la escala del enemigo existente.
+
+También se eliminó el fondo blanquecino que el recorte anterior había dejado
+**entre las piernas en todos los estados**, no solo al caminar. Para evitar
+aureolas, el nuevo WALK descarta los píxeles ambientales semitransparentes
+antes de reducir las imágenes. La versión 04A permanece en Git como respaldo.
+
+Solo cambia el recurso gráfico y la versión de caché: IA, colisiones, daño,
+parámetros de cabotada, animaciones restantes y llaurador permanecen intactos.
+La prueba \`tests/sprite-pesol-04b.test.cjs\` verifica el PNG real, los seis
+pasos diferentes, desplazamiento de los pies, transparencia, ausencia de
+píxeles blanquecinos bajo la cintura y selección en Canvas.
