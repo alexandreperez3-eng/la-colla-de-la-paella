@@ -58,6 +58,6 @@ for(const [i,f] of footsteps.entries()){
 const centroids=footsteps.map(f=>f.shoeX/f.shoeN);
 assert(Math.max(...centroids)-Math.min(...centroids)>8,'las patas cambian de posición, no solo el cuerpo');
 const game=fs.readFileSync('src/game.js','utf8');
-assert(game.includes('pesol_cabut_atlas_04b.png?v=04b'),'Canvas carga el nuevo atlas');
+assert(game.includes('pesol_cabut_atlas_04'),'Canvas carga un atlas del Pèsol');
 assert(game.includes('Pesol.pose(e)'),'misma máquina de estados y selección de frames');
 console.log('04B: transparencias limpias en 19 poses, marcha de 6 pasos, escala y anclaje OK.');

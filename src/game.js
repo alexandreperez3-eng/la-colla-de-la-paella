@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 04B
+ LA COLLA DE LA PAELLA · PASO 04C
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -61,7 +61,7 @@
     walkAlternadoImage.naturalWidth === 1248 && walkAlternadoImage.naturalHeight === 160;
   // Cinco filas: guardia (4), carrera (6), cabotada (4), daño (2), KO (3).
   const pesolImage=new Image();
-  pesolImage.src='assets/pesol_cabut_atlas_04b.png?v=04b';
+  pesolImage.src='assets/pesol_cabut_atlas_04c.png?v=04c';
   const pesolReady=()=>pesolImage.complete &&
     pesolImage.naturalWidth===768 && pesolImage.naturalHeight===560;
   const PESOL_SPRITE=Object.freeze({ancho:128,alto:112});
