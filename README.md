@@ -182,3 +182,10 @@ Las pruebas detectaron que copiar los fotogramas desde un PNG local introducía 
 La casilla «Remate con el llaurador original (03P)» viene activada; al desactivarla puedes comparar con el remate generado 03M (que permanece intacto). Los tiempos, daño, alcance, retroceso, el feedback 03N, la respiración 03O y los otros tres golpes no cambian.
 
 **Limitación artística:** la pose de preparación eleva una corbella más que la otra y la pose de impacto viene de una animación distinta del mismo pack: puede requerir refinamiento del movimiento de los brazos. El objetivo de esta versión es resolver la identidad visual del personaje *sin volver a generarlo*.
+
+
+## Paso 03R — Marcha sin halo (19 nov. 2026)
+
+Se conserva el `IDLE` 03Q y todo el sistema de combate. Se sustituye exclusivamente `WALK` con el spritesheet aprobado después de detectar una sombra residual bajo los pantalones del 03Q. El nuevo archivo es `assets/llaurador_walk_alternado_03r.png` (1248 × 160 píxeles; seis celdas de 208 × 160), adaptado a partir de la hoja generada `animación_pixel_art_del_labrador_valenciano.png`. La zona exterior semitransparente se limpia antes de reducir los fotogramas y se conservan las seis poses del ciclo aprobado.
+
+La ruta del recurso cambia de 03Q a 03R para evitar que Safari reutilice la imagen antigua en caché. `tests/sprite-walk-03r.test.cjs` comprueba que realmente es otro PNG, sus celdas, márgenes, transparencia, poses distintas y la referencia usada en el motor. Los originales 03Q permanecen en Git para comparar si fuera necesario.

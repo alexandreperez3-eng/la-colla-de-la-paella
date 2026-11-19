@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 03Q
+ LA COLLA DE LA PAELLA · PASO 03R
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -54,7 +54,7 @@
   const idleGuardImage = new Image();
   idleGuardImage.src = 'assets/llaurador_idle_guardia_03q.png?v=03q';
   const walkAlternadoImage = new Image();
-  walkAlternadoImage.src = 'assets/llaurador_walk_alternado_03q.png?v=03q';
+  walkAlternadoImage.src = 'assets/llaurador_walk_alternado_03r.png?v=03r';
   const idleGuardReady = () => idleGuardImage.complete &&
     idleGuardImage.naturalWidth === 832 && idleGuardImage.naturalHeight === 160;
   const walkAlternadoReady = () => walkAlternadoImage.complete &&
@@ -354,7 +354,7 @@
     }else if(p.state===STATE.WALK){
       const frame=Animacion.frame(p.animationTime,walkFps,WALK_SPRITE.cantidad);
       const nuevo=useUnifiedPack.checked && walkAlternadoReady();
-      const version=nuevo?'piernas alternas 03Q':
+      const version=nuevo?'piernas alternas sin halo 03R':
         (useNewWalk.checked && walkV3SpriteReady() ? 'cara corregida' : 'anterior');
       animationLabel.textContent='Sprite: WALK '+version+' '+(frame+1)+'/6';
     }else if(p.state===STATE.ATTACK){
