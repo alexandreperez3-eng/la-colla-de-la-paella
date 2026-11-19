@@ -32,7 +32,7 @@ assert.equal(hits,1,'solo hay un impacto por cabotada');
 assert.equal(e.state,'RECOVER','retraso antes de otro ataque');
 assert.equal(AI.pose(e).fila,0);
 for(let i=0;i<29;i++)AI.avanzar(e,hero,.02,cfg,limits);
-assert.equal(e.state,'CHASE','recuperación terminada');
+assert(['CHASE','PRE_ATTACK'].includes(e.state),'tras recuperarse puede empezar un nuevo ataque si el jugador sigue cerca');
 const wounded=fresh();
 assert(AI.recibirGolpe(wounded,1,1,16,limits,cfg));
 assert.equal(wounded.hp,1);assert.equal(wounded.state,'HURT');
