@@ -233,3 +233,12 @@ parámetros de cabotada, animaciones restantes y llaurador permanecen intactos.
 La prueba \`tests/sprite-pesol-04b.test.cjs\` verifica el PNG real, los seis
 pasos diferentes, desplazamiento de los pies, transparencia, ausencia de
 píxeles blanquecinos bajo la cintura y selección en Canvas.
+
+
+## Paso 04C — Pèsol: WALK con la identidad original y seis pasos
+
+La fila de marcha (fila 1) del Pèsol Cabut se reemplaza por las seis poses del ciclo aprobado `ciclo_de_marcha_del_guisante_enfadado.png`. El atlas `assets/pesol_cabut_atlas_04c.png` mantiene la misma resolución **768 × 560**, seis columnas de **128 × 112** y exactamente la misma paleta y transparencia de 04B.
+
+Solo cambian los píxeles de la fila **CHASE/WALK**. Las filas **IDLE, ATTACK, HURT y KO** se conservan bit a bit respecto a 04B; la IA de `src/pesol.js`, las hitboxes, la vida y los ataques del llaurador siguen intactos. Se han centrado las seis poses y alineado las botas para evitar saltos de posición o fondos blanquecinos.
+
+La prueba `tests/sprite-pesol-04c.test.cjs` comprueba transparencia, escala, seis poses distintas, cambio de posición de las botas, igualdad exacta de los otros estados y la conexión al motor. Las versiones anteriores permanecen para comparación.
