@@ -10,7 +10,11 @@ window.CONFIG = {
   },
   limites: {izquierda: 30, derecha: 870, arriba: 284, abajo: 444},
   arroz: {x: 745, y: 369, radioRecogida: 53},
-  ladron: {x: 530, y: 365, vida: 10, semiancho: 22, semiprofundidad: 14},
+  // Primer esbirro: poco resistente, rápido, con cabotada anunciada.
+  pesol: {x: 535, y: 365, vida: 2, semiancho: 27, semiprofundidad: 13,
+    velocidad: 148, deteccion: 460, distanciaAtaque: 63, carrilAtaque: 38,
+    preparacion: 0.34, duracionAtaque: 0.38, instanteImpacto: 0.19,
+    embestida: 178, alcance: 67, recuperacion: 0.52, aturdimiento: 0.32},
   ataque: {
     // Cuatro pulsaciones: izquierda, derecha, patada, remate descendente.
     movimientos: [
