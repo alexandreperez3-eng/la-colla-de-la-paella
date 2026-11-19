@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),zlib=require('node:zlib');
+const png=fs.readFileSync('assets/pesol_cabut_atlas_04a.png');
+assert(png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])));
+const width=png.readUInt32BE(16),height=png.readUInt32BE(20);
+assert.equal(width,128*6,'6 celdas en X');
+assert.equal(height,112*5,'5 filas por estado');
+assert.equal(png[24],8,'profundidad de color de 8 bits');
+assert.equal(png[25],3,'paleta PNG indexada');
+assert(png.includes(Buffer.from('tRNS')),'alpha real en el atlas');
+const raw=fs.readFileSync('src/game.js','utf8');
+assert(raw.includes('pesol_cabut_atlas_04a.png'),'imagen vinculada al motor');
+assert(raw.includes('Pesol.pose(e)'),'frames elegidos por IA');
+assert(raw.includes('Pesol.avanzar(e,p,'),'IA ejecutada en el bucle');
+const html=fs.readFileSync('index.html','utf8');
+assert(html.indexOf('src/pesol.js')>=0 && html.indexOf('src/pesol.js')<html.indexOf('src/game.js'),
+  'IA cargada antes del motor');
+const cfg=fs.readFileSync('src/config.js','utf8');
+assert(cfg.includes('vida: 2, semiancho: 27'),'perfil débil y rápido');
+console.log('04A: atlas del Pèsol 768×560, 5 estados, transparencia y carga de IA verificados.');

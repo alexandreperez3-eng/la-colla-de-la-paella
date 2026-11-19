@@ -189,3 +189,26 @@ La casilla «Remate con el llaurador original (03P)» viene activada; al desacti
 Se conserva el `IDLE` 03Q y todo el sistema de combate. Se sustituye exclusivamente `WALK` con el spritesheet aprobado después de detectar una sombra residual bajo los pantalones del 03Q. El nuevo archivo es `assets/llaurador_walk_alternado_03r.png` (1248 × 160 píxeles; seis celdas de 208 × 160), adaptado a partir de la hoja generada `animación_pixel_art_del_labrador_valenciano.png`. La zona exterior semitransparente se limpia antes de reducir los fotogramas y se conservan las seis poses del ciclo aprobado.
 
 La ruta del recurso cambia de 03Q a 03R para evitar que Safari reutilice la imagen antigua en caché. `tests/sprite-walk-03r.test.cjs` comprueba que realmente es otro PNG, sus celdas, márgenes, transparencia, poses distintas y la referencia usada en el motor. Los originales 03Q permanecen en Git para comparar si fuera necesario.
+
+
+## Paso 04A — Pèsol Cabut: primer esbirro jugable
+
+Se reemplaza el ladrón rectangular de entrenamiento por el **Pèsol Cabut**, nuestro
+primer enemigo mutado por el llepó de la séquia. Su aspecto procede de la ficha
+artística aprobada; el atlas transparente `assets/pesol_cabut_atlas_04a.png`
+contiene 5 filas de 6 celdas de **128 × 112**: IDLE (4), CHASE (6),
+ATTACK/cabotada (4), HURT (2) y KO (3).
+
+`src/pesol.js` contiene una máquina de estados independiente de Canvas:
+`IDLE → CHASE → PRE_ATTACK → ATTACK → RECOVER`, con interrupciones
+`HURT` y `KO`. Se anticipa la cabotada, se verifica su impacto **una sola
+vez** por ataque, el jugador pierde un PV y dispone de invulnerabilidad
+temporal tras el impacto. Se ven sus corazones de vida, puede perder el combate
+y reiniciarlo. El Pèsol tiene 2 PV y puede ser derribado por las corbelladas
+sin cambiar el daño, las hitboxes ni los tiempos del combo original.
+Tras derrotarlo, se puede recoger el arroz como antes.
+
+Si la imagen tarda en cargar, se dibuja un Pèsol provisional en Canvas
+para evitar un enemigo invisible. La lógica del esbirro y las dimensiones
+del atlas tienen tests propios: `tests/pesol.test.cjs` y
+`tests/sprite-pesol-04a.test.cjs`.
