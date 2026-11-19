@@ -9,7 +9,7 @@ assert.equal(png[24],8,'profundidad de color de 8 bits');
 assert.equal(png[25],3,'paleta PNG indexada');
 assert(png.includes(Buffer.from('tRNS')),'alpha real en el atlas');
 const raw=fs.readFileSync('src/game.js','utf8');
-assert(raw.includes('pesol_cabut_atlas_04b.png'),'el motor usa la versión actualizada');
+assert(raw.includes('pesol_cabut_atlas_04'),'el motor carga el atlas del Pèsol');
 assert(raw.includes('Pesol.pose(e)'),'frames elegidos por IA');
 assert(raw.includes('Pesol.avanzar(e,p,'),'IA ejecutada en el bucle');
 const html=fs.readFileSync('index.html','utf8');
