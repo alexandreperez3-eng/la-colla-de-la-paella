@@ -31,3 +31,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;ma
 .lesson-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hitbox-option{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}
 .hitbox-option input{accent-color:#f6cf67;width:16px;height:16px;cursor:pointer}
+
+/* Missió 06: el sello de cada objeto coincide con el de su premio. */
+.horta-guide{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:#e7dbc0}
+.horta-guide span{white-space:nowrap}
+.horta-guide b{font-size:16px;line-height:1}
+.horta-guide .vida{color:#ff9b84}
+.horta-guide .remoli{color:#94f3e9}
+.controls .pad,.controls .action-buttons{align-self:flex-start}

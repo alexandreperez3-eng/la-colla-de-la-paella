@@ -1,5 +1,5 @@
 /*
- LA COLLA DE LA PAELLA · PASO 04C
+ LA COLLA DE LA PAELLA · MISSIÓ 06
  Aprende: bucle de juego, delta, teclas, controles táctiles,
  movimiento normalizado, Canvas 2D y detección de proximidad.
 */
@@ -121,7 +121,8 @@
       animationTime:0,lastAnimationState:STATE.IDLE,
       hp:config.personaje.vida,hurtCooldown:0
     },
-    enemy:Pesol.crear(config.pesol),
+    enemy:null,
+    horta:null,
     defeated:false,
     collected:false,
     elapsed:0,
@@ -136,6 +137,7 @@
   function reset() {
     game.player.x = config.personaje.xInicial;
     game.player.y = config.personaje.yInicial;
+    game.player.facing = 1;
     game.player.walking = 0;
     game.player.state = STATE.IDLE;
     game.player.stateTime = 0;
@@ -148,6 +150,7 @@
     game.player.hp = config.personaje.vida;
     game.player.hurtCooldown = 0;
     game.enemy = Pesol.crear(config.pesol);
+    game.horta = Horta.crear(config.horta);
     game.defeated = false;
     game.collected = false;
     game.elapsed = 0;
@@ -157,7 +160,7 @@
     game.burstX = 0;
     game.burstY = 0;
     objective.textContent = '🟢 Derrota al Pèsol Cabut';
-    status.textContent = '¡Cuidado! El Pèsol Cabut te persigue y prepara una cabotada. Derrótalo y recupera el arroz.';
+    status.textContent = 'Rompe cajas, capazos y tinajas para conseguir premios. Derrota al Pèsol y recupera el arroz.';
     stateLabel.textContent = 'Estado: IDLE';
     comboLabel.textContent = 'Combo: —';
     specialStatus.textContent = 'REMOLÍ';
@@ -174,7 +177,7 @@
   // La cola permite completar el combo incluso tocando el botón rápidamente.
   function startAttack() {
     const p=game.player;
-    if(game.collected || game.defeated || p.state===STATE.SPECIAL || game.enemy.hp===0)return;
+    if(game.collected || game.defeated || p.state===STATE.SPECIAL)return;
     const movimientos=config.ataque.movimientos;
     if(p.state===STATE.ATTACK){
       const antes=p.queuedHits;
@@ -196,7 +199,7 @@
   // La técnica circular no necesita mirar hacia el enemigo.
   function startSpecial() {
     const p=game.player;
-    if(game.collected || game.defeated || game.enemy.hp===0 || p.specialCooldown>0 ||
+    if(game.collected || game.defeated || p.specialCooldown>0 ||
        p.state===STATE.ATTACK || p.state===STATE.SPECIAL)return;
     p.state=STATE.SPECIAL;
     p.stateTime=0;
@@ -246,14 +249,14 @@
   // Los golpes no hacen daño en cada frame: solo al cruzar su instante de impacto.
   function aplicarImpacto() {
     const p=game.player,e=game.enemy;
-    if(e.hp<=0 || game.defeated)return;
     const especial=p.state===STATE.SPECIAL;
     const tecnica=especial ? config.especial : config.ataque.movimientos[p.attackStep-1];
-    const acierta=especial ?
-      Combat.circular(p,e,config.especial.radio) :
-      Combat.frontal(p,e,tecnica.alcance,config.ataque.profundidad,
-        config.pesol.semiancho,config.pesol.semiprofundidad);
-    if(acierta){
+    const acierta=(objetivo, geometria=objetivo)=>especial ?
+      Combat.circular(p,objetivo,config.especial.radio) :
+      Combat.frontal(p,objetivo,tecnica.alcance,config.ataque.profundidad,
+        geometria.semiancho,geometria.semiprofundidad);
+    const impactos=Horta.golpear(game.horta,acierta,tecnica.dano,game.elapsed);
+    if(e.hp>0 && acierta(e,config.pesol)){
       const contactoX=e.x, contactoY=e.y-43;
       Pesol.recibirGolpe(e,tecnica.dano,p.facing,
         especial?25:(tecnica.retroceso||18),config.limites,config.pesol);
@@ -269,12 +272,16 @@
         ? '¡Impacto! Al Pèsol Cabut le quedan '+e.hp+' PV.'
         : '¡Pèsol Cabut derrotado! Ahora recupera el arroz.';
       if(e.hp===0)objective.textContent='🌾 Recoge el saco de arroz';
+    }else if(impactos.some(objeto=>objeto.estado==='roto')){
+      status.textContent='¡Premio en el suelo! Acércate cuando lo necesites.';
+    }else if(impactos.length){
+      status.textContent='Objeto agrietado. Remátalo con otro golpe.';
     }else{
       status.textContent='Fallaste: revisa orientación, distancia y profundidad.';
     }
   }
 
-    function update(delta) {
+  function update(delta) {
     const p=game.player,e=game.enemy;
     game.elapsed+=delta;
     const hold=Feedback.repartirDelta(delta,game.hitStop);
@@ -283,10 +290,7 @@
     game.burstTime=Math.max(0,game.burstTime-delta);
     p.hurtCooldown=Math.max(0,p.hurtCooldown-delta);
     p.specialCooldown=Math.max(0,p.specialCooldown-delta);
-    specialStatus.textContent=p.specialCooldown>0 ?
-      Math.ceil(p.specialCooldown)+' s' : 'REMOLÍ';
-    specialButton.disabled=p.specialCooldown>0 || p.state===STATE.ATTACK ||
-      p.state===STATE.SPECIAL || game.collected || game.defeated;
+    Horta.limpiarEfectos(game.horta,game.elapsed);
 
     if(!game.collected && !game.defeated){
       if(p.state===STATE.ATTACK || p.state===STATE.SPECIAL){
@@ -329,6 +333,8 @@
           p.state=STATE.IDLE;
         }
       }
+      const premio=Horta.recoger(game.horta,p,config.personaje.vida,game.elapsed);
+      if(premio)status.textContent=premio;
       if(e.hp===0 && Math.hypot(p.x-config.arroz.x,p.y-config.arroz.y)<config.arroz.radioRecogida){
         game.collected=true;
         objective.textContent='✅ ¡ARRÒS RECUPERAT!';
@@ -353,6 +359,10 @@
       // Se conserva la animación de derrota después del golpe final.
       Pesol.avanzar(e,p,hold.accion,config.pesol,config.limites);
     }
+    specialStatus.textContent=p.specialCooldown>0 ?
+      Math.ceil(p.specialCooldown)+' s' : 'REMOLÍ';
+    specialButton.disabled=p.specialCooldown>0 || p.state===STATE.ATTACK ||
+      p.state===STATE.SPECIAL || game.collected || game.defeated;
     // El estado determina la secuencia; el tiempo determina el frame.
     if(p.state!==p.lastAnimationState){
       p.animationTime=0;
@@ -812,9 +822,17 @@
       drawPlayer();
       ctx.restore();
     };
-    // El eje de profundidad decide quién aparece delante.
-    if(game.enemy.y<game.player.y){drawEnemy();drawHero();}
-    else{drawHero();drawEnemy();}
+    // Los objetos y premios comparten el orden de profundidad con los personajes.
+    const escena=[{y:game.player.y,dibujar:drawHero},{y:game.enemy.y,dibujar:drawEnemy}];
+    for(const objeto of game.horta.objetos){
+      if(objeto.estado!=='roto')escena.push({y:objeto.y,dibujar:()=>HortaRender.objeto(ctx,objeto)});
+    }
+    for(const premio of game.horta.recompensas){
+      escena.push({y:premio.y,dibujar:()=>HortaRender.recompensa(ctx,premio,game.elapsed)});
+    }
+    escena.sort((a,b)=>a.y-b.y);
+    for(const elemento of escena)elemento.dibujar();
+    HortaRender.efectos(ctx,game.horta.efectos,game.elapsed);
     drawImpactBurst();
     if(debugHitboxes.checked)drawHitboxes();
     ctx.restore();

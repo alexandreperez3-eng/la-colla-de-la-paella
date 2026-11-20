@@ -10,8 +10,15 @@ window.CONFIG = {
   },
   limites: {izquierda: 30, derecha: 870, arriba: 284, abajo: 444},
   arroz: {x: 745, y: 369, radioRecogida: 53},
-  // Primer esbirro: poco resistente, rápido, con cabotada anunciada.
-  pesol: {x: 535, y: 365, vida: 2, semiancho: 27, semiprofundidad: 13,
+  // Los dos tipos de premio se reparten por carriles distintos.
+  horta: [
+    {tipo:'cabas', x:267, y:333, premio:'remoli'},
+    {tipo:'caixa', x:386, y:419, premio:'vida'},
+    {tipo:'gerra', x:559, y:305, premio:'vida'},
+    {tipo:'caixa', x:665, y:426, premio:'remoli'}
+  ],
+  // Da tiempo a usar los recursos del terreno durante el duelo.
+  pesol: {x: 535, y: 365, vida: 8, semiancho: 27, semiprofundidad: 13,
     velocidad: 148, deteccion: 460, distanciaAtaque: 63, carrilAtaque: 38,
     preparacion: 0.34, duracionAtaque: 0.38, instanteImpacto: 0.19,
     embestida: 178, alcance: 67, recuperacion: 0.52, aturdimiento: 0.32},

@@ -15,6 +15,4 @@ assert(raw.includes('Pesol.avanzar(e,p,'),'IA ejecutada en el bucle');
 const html=fs.readFileSync('index.html','utf8');
 assert(html.indexOf('src/pesol.js')>=0 && html.indexOf('src/pesol.js')<html.indexOf('src/game.js'),
   'IA cargada antes del motor');
-const cfg=fs.readFileSync('src/config.js','utf8');
-assert(cfg.includes('vida: 2, semiancho: 27'),'perfil débil y rápido');
 console.log('04A: atlas del Pèsol 768×560, 5 estados, transparencia y carga de IA verificados.');
