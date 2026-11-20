@@ -22,10 +22,10 @@ e.x=158;e.y=365;AI.cambiar(e,'CHASE');
 AI.avanzar(e,hero,.03,cfg,limits);
 assert.equal(e.state,'PRE_ATTACK','anuncia el golpe antes de atacar');
 assert.equal(AI.pose(e).fila,2);
-for(let i=0;i<18;i++)AI.avanzar(e,hero,.02,cfg,limits);
+for(let i=0;i<Math.ceil(cfg.preparacion/.02);i++)AI.avanzar(e,hero,.02,cfg,limits);
 assert.equal(e.state,'ATTACK','preparación completa');
 let hits=0;
-for(let i=0;i<18;i++){
+for(let i=0;i<Math.ceil(cfg.duracionAtaque/.02);i++){
  if(AI.avanzar(e,hero,.02,cfg,limits).golpeJugador)hits++;
 }
 assert.equal(hits,1,'solo hay un impacto por cabotada');

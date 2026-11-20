@@ -31,3 +31,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;ma
 .lesson-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hitbox-option{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}
 .hitbox-option input{accent-color:#f6cf67;width:16px;height:16px;cursor:pointer}
+
+/* Los dos pulgares alcanzan los controles en las esquinas de la arena. */
+.controls{display:grid;grid-template-columns:1fr auto;align-items:center}
+.pad{order:0;justify-self:start}.action-buttons{order:0;justify-self:end}
+.lesson{order:1;grid-column:1/-1;width:100%;max-width:none;grid-template-columns:auto 1fr;align-items:start}
+.lesson summary{cursor:pointer;padding:6px;font-size:14px}
+.lesson details[open] .lesson-actions{margin-top:8px}
+@media(pointer:coarse) and (orientation:landscape){
+  .stage{max-width:calc((100dvh - 235px)*1.875);margin-inline:auto}
+}
