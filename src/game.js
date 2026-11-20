@@ -121,7 +121,7 @@
       animationTime:0,lastAnimationState:STATE.IDLE,
       hp:config.personaje.vida,hurtCooldown:0
     },
-    enemy:Pesol.crear(config.pesol),
+    mission:Mision.crear(),
     defeated:false,
     collected:false,
     elapsed:0,
@@ -147,7 +147,9 @@
     game.player.lastAnimationState = STATE.IDLE;
     game.player.hp = config.personaje.vida;
     game.player.hurtCooldown = 0;
-    game.enemy = Pesol.crear(config.pesol);
+    game.player.facing = 1;
+    game.mission = Mision.crear();
+    Mision.avanzar(game.mission,game.player,0,config);
     game.defeated = false;
     game.collected = false;
     game.elapsed = 0;
@@ -156,8 +158,8 @@
     game.burstTime = 0;
     game.burstX = 0;
     game.burstY = 0;
-    objective.textContent = '🟢 Derrota al Pèsol Cabut';
-    status.textContent = '¡Cuidado! El Pèsol Cabut te persigue y prepara una cabotada. Derrótalo y recupera el arroz.';
+    actualizarObjetivo();
+    status.textContent = 'Cuando veas el aviso de cabotada, cambia de carril o interrumpe el ataque.';
     stateLabel.textContent = 'Estado: IDLE';
     comboLabel.textContent = 'Combo: —';
     specialStatus.textContent = 'REMOLÍ';
@@ -174,7 +176,7 @@
   // La cola permite completar el combo incluso tocando el botón rápidamente.
   function startAttack() {
     const p=game.player;
-    if(game.collected || game.defeated || p.state===STATE.SPECIAL || game.enemy.hp===0)return;
+    if(game.collected || game.defeated || p.state===STATE.SPECIAL || game.mission.fase!=='combate')return;
     const movimientos=config.ataque.movimientos;
     if(p.state===STATE.ATTACK){
       const antes=p.queuedHits;
@@ -196,7 +198,7 @@
   // La técnica circular no necesita mirar hacia el enemigo.
   function startSpecial() {
     const p=game.player;
-    if(game.collected || game.defeated || game.enemy.hp===0 || p.specialCooldown>0 ||
+    if(game.collected || game.defeated || game.mission.fase!=='combate' || p.specialCooldown>0 ||
        p.state===STATE.ATTACK || p.state===STATE.SPECIAL)return;
     p.state=STATE.SPECIAL;
     p.stateTime=0;
@@ -245,37 +247,44 @@
 
   // Los golpes no hacen daño en cada frame: solo al cruzar su instante de impacto.
   function aplicarImpacto() {
-    const p=game.player,e=game.enemy;
-    if(e.hp<=0 || game.defeated)return;
+    const p=game.player;
     const especial=p.state===STATE.SPECIAL;
     const tecnica=especial ? config.especial : config.ataque.movimientos[p.attackStep-1];
-    const acierta=especial ?
-      Combat.circular(p,e,config.especial.radio) :
-      Combat.frontal(p,e,tecnica.alcance,config.ataque.profundidad,
-        config.pesol.semiancho,config.pesol.semiprofundidad);
-    if(acierta){
-      const contactoX=e.x, contactoY=e.y-43;
-      Pesol.recibirGolpe(e,tecnica.dano,p.facing,
-        especial?25:(tecnica.retroceso||18),config.limites,config.pesol);
+    let impactos=0;
+    for(const e of game.mission.enemigos){
+      if(e.hp<=0)continue;
+      const acierta=especial ? Combat.circular(p,e,config.especial.radio) :
+        Combat.frontal(p,e,tecnica.alcance,config.ataque.profundidad,
+          config.pesol.semiancho,config.pesol.semiprofundidad);
+      if(!acierta)continue;
+      impactos++;
+      const direccion=especial ? Math.sign(e.x-p.x)||p.facing : p.facing;
       if(!especial && p.attackStep===4 && strongImpact.checked){
         game.hitStop=config.feedbackRemate.pausa;
         game.shakeTime=config.feedbackRemate.sacudida;
         game.burstTime=config.feedbackRemate.destello;
-        game.burstX=contactoX;
-        game.burstY=contactoY;
-        e.flash=0.25;
+        game.burstX=e.x;
+        game.burstY=e.y-43;
       }
-      status.textContent=e.hp>0
-        ? '¡Impacto! Al Pèsol Cabut le quedan '+e.hp+' PV.'
-        : '¡Pèsol Cabut derrotado! Ahora recupera el arroz.';
-      if(e.hp===0)objective.textContent='🌾 Recoge el saco de arroz';
-    }else{
-      status.textContent='Fallaste: revisa orientación, distancia y profundidad.';
+      Pesol.recibirGolpe(e,tecnica.dano,direccion,
+        especial?25:(tecnica.retroceso||18),config.limites,config.pesol);
     }
+    status.textContent=impactos
+      ? (tecnica.nombre || 'Remolí')+' · '+impactos+(impactos===1?' impacto':' impactos')
+      : 'Golpe al aire';
   }
 
-    function update(delta) {
-    const p=game.player,e=game.enemy;
+  function actualizarObjetivo(){
+    const m=game.mission;
+    const quedan=Mision.pendientes(m)+m.enemigos.filter(e=>e.hp>0).length;
+    let texto='Oleada '+m.oleada+'/'+Mision.total+' · Quedan '+quedan;
+    if(m.fase==='descanso')texto='Oleada '+m.oleada+' superada';
+    if(m.fase==='arroz')texto='Tres oleadas superadas · Recoge el arroz';
+    if(objective.textContent!==texto)objective.textContent=texto;
+  }
+
+  function update(delta) {
+    const p=game.player,m=game.mission;
     game.elapsed+=delta;
     const hold=Feedback.repartirDelta(delta,game.hitStop);
     game.hitStop=hold.restante;
@@ -286,7 +295,8 @@
     specialStatus.textContent=p.specialCooldown>0 ?
       Math.ceil(p.specialCooldown)+' s' : 'REMOLÍ';
     specialButton.disabled=p.specialCooldown>0 || p.state===STATE.ATTACK ||
-      p.state===STATE.SPECIAL || game.collected || game.defeated;
+      p.state===STATE.SPECIAL || game.collected || game.defeated || m.fase!=='combate';
+    attackButton.disabled=game.collected || game.defeated || m.fase!=='combate';
 
     if(!game.collected && !game.defeated){
       if(p.state===STATE.ATTACK || p.state===STATE.SPECIAL){
@@ -329,29 +339,39 @@
           p.state=STATE.IDLE;
         }
       }
-      if(e.hp===0 && Math.hypot(p.x-config.arroz.x,p.y-config.arroz.y)<config.arroz.radioRecogida){
+      Mision.avanzar(m,p,hold.accion,config);
+      actualizarObjetivo();
+      if(m.fase==='arroz' && Math.hypot(p.x-config.arroz.x,p.y-config.arroz.y)<config.arroz.radioRecogida){
         game.collected=true;
         objective.textContent='✅ ¡ARRÒS RECUPERAT!';
-        status.textContent='¡Victoria! Has recuperado el arroz de las garras del Pèsol Cabut.';
+        status.textContent='¡Victoria! Has recuperado el arroz para la colla.';
       }
     }
     // IA independiente: el pèsol decide perseguir, avisar, embestir o recuperarse.
     if(!game.collected && !game.defeated){
-      const respuesta=Pesol.avanzar(e,p,hold.accion,config.pesol,config.limites);
-      if(respuesta.golpeJugador && p.hurtCooldown<=0){
-        p.hp=Math.max(0,p.hp-1);
-        p.hurtCooldown=0.85;
-        game.shakeTime=Math.max(game.shakeTime,0.10);
-        status.textContent='¡Cabotada! Al llaurador le quedan '+p.hp+' PV.';
-        if(p.hp===0){
-          game.defeated=true;
-          objective.textContent='💔 El Pèsol Cabut ha vencido';
-          status.textContent='¡El llaurador ha caído! Pulsa Volver a empezar.';
+      m.turno=Math.max(0,m.turno-hold.accion);
+      for(const e of m.enemigos){
+        const anterior=e.state;
+        const respuesta=Pesol.avanzar(e,p,hold.accion,config.pesol,config.limites,m.turno<=0);
+        if(anterior!==e.state && e.state===Pesol.ESTADOS.PRE_ATTACK)m.turno=0.78;
+        if(respuesta.golpeJugador && p.hurtCooldown<=0){
+          p.hp=Math.max(0,p.hp-1);
+          p.hurtCooldown=0.85;
+          game.shakeTime=Math.max(game.shakeTime,0.10);
+          status.textContent='¡Cabotada! Al llaurador le quedan '+p.hp+' PV.';
+          if(p.hp===0){
+            game.defeated=true;
+            objective.textContent='💔 Los Pèsols han vencido';
+            status.textContent='¡El llaurador ha caído! Pulsa Volver a empezar.';
+          }
         }
+        if(game.defeated)break;
       }
-    }else if(e.hp===0){
-      // Se conserva la animación de derrota después del golpe final.
-      Pesol.avanzar(e,p,hold.accion,config.pesol,config.limites);
+      Mision.separar(m.enemigos,hold.accion,config);
+    }else{
+      for(const e of m.enemigos){
+        if(e.hp===0)Pesol.avanzar(e,p,hold.accion,config.pesol,config.limites);
+      }
     }
     // El estado determina la secuencia; el tiempo determina el frame.
     if(p.state!==p.lastAnimationState){
@@ -430,7 +450,7 @@
     ctx.fillText('CAMÍ DE L’HORTA',24,36);
   }
   function drawRice(){
-    if(game.collected)return;
+    if(game.collected || game.mission.fase!=='arroz')return;
     const {x,y}=config.arroz;
     ellipse(x,y,28,8,'#584b3b77');
     ctx.save();ctx.translate(x,y-31);
@@ -443,8 +463,8 @@
     ctx.fillStyle='#234e43';ctx.font='bold 15px system-ui';ctx.textAlign='center';
     ctx.fillText('⬇ RECOGE',x,y-74);
   }
-  function drawEnemy(){
-    const e=game.enemy,{x,y}=e;
+  function drawEnemy(e){
+    const {x,y}=e;
     if(e.state===Pesol.ESTADOS.KO && e.stateTime>2.3)return;
     const muerto=e.state===Pesol.ESTADOS.KO;
     ellipse(x,y,27,7,'#59472f66');
@@ -731,7 +751,7 @@
   // El desplazamiento vertical -70 es únicamente visual; en lógica
   // las dos cajas se calculan sobre la posición de los pies.
   function drawHitboxes() {
-    const p=game.player, e=game.enemy, a=config.ataque, l=config.pesol;
+    const p=game.player, a=config.ataque, l=config.pesol;
     // La caja de depuración debe coincidir con el alcance de cada movimiento.
     const alcance=p.state===STATE.ATTACK ? a.movimientos[p.attackStep-1].alcance : a.alcance;
     const xInicio=p.facing>0?p.x-12:p.x-alcance;
@@ -744,7 +764,8 @@
     ctx.strokeStyle='#ffe077';
     ctx.lineWidth=2;
     ctx.strokeRect(xInicio,yCentro-a.profundidad,ancho,2*a.profundidad);
-    if(e.hp>0){
+    for(const e of game.mission.enemigos){
+      if(e.hp<=0)continue;
       ctx.fillStyle='rgba(242,85,109,.16)';
       ctx.fillRect(e.x-l.semiancho,e.y-38-l.semiprofundidad,2*l.semiancho,2*l.semiprofundidad);
       ctx.strokeStyle='#f65e80';
@@ -813,8 +834,11 @@
       ctx.restore();
     };
     // El eje de profundidad decide quién aparece delante.
-    if(game.enemy.y<game.player.y){drawEnemy();drawHero();}
-    else{drawHero();drawEnemy();}
+    const actores=[game.player,...game.mission.enemigos].sort((a,b)=>a.y-b.y);
+    for(const actor of actores){
+      if(actor===game.player)drawHero();
+      else drawEnemy(actor);
+    }
     drawImpactBurst();
     if(debugHitboxes.checked)drawHitboxes();
     ctx.restore();
@@ -824,11 +848,21 @@
     ctx.fillStyle='#ffe1a0';
     ctx.fillText('VIDA '+ '♥'.repeat(game.player.hp)+
       '♡'.repeat(config.personaje.vida-game.player.hp),28,73);
+    if(!game.defeated && !game.collected){
+      const m=game.mission;
+      ctx.textAlign='right';ctx.font='bold 20px system-ui';
+      const aviso=m.fase==='descanso' ? 'OLEADA '+m.oleada+' SUPERADA' :
+        m.fase==='arroz' ? '3/3 SUPERADAS · RECUPERA EL ARROZ' :
+        'OLEADA '+m.oleada+'/'+Mision.total;
+      const ancho=ctx.measureText(aviso).width+28;
+      rect(882-ancho,50,ancho,33,'#143b36ed');
+      ctx.fillStyle='#ffe1a0';ctx.fillText(aviso,868,73);
+    }
     if(game.defeated){
       ctx.fillStyle='#321b22e8';ctx.fillRect(209,154,482,150);
       ctx.textAlign='center';ctx.fillStyle='#ffe2a4';
       ctx.font='bold 28px system-ui';
-      ctx.fillText('EL PÈSOL T\'HA TOMBAT!',450,215);
+      ctx.fillText('ELS PÈSOLS T’HAN TOMBAT!',450,215);
       ctx.font='17px system-ui';ctx.fillStyle='#fff1cf';
       ctx.fillText('Pulsa «Volver a empezar» para reintentarlo',450,257);
     }else if(game.collected){
@@ -836,7 +870,7 @@
       ctx.textAlign='center';ctx.fillStyle='#f8dc95';ctx.font='bold 31px system-ui';
       ctx.fillText('ARRÒS RECUPERAT! 🥘',450,203);
       ctx.fillStyle='#fff4d2';ctx.font='17px system-ui';
-      ctx.fillText('El Pèsol Cabut ja no ens molesta!',450,241);
+      ctx.fillText('L’horta torna a ser nostra!',450,241);
     }
   }
     let last=0;
