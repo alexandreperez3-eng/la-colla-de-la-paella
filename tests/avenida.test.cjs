@@ -8,7 +8,7 @@ assert.equal(M.visibles(m).length,5,'los cinco Pèsols ya existen en el mundo');
 const grupoInicial=m.grupos[0],segundoGrupo=m.grupos[1];
 const posicionesIniciales=M.visibles(m).map(e=>[e.x,e.y]);
 for(let i=0;i<900;i++)M.avanzar(m,p,.016,cfg);
-assert.deepEqual(Array.from(M.visibles(m),e=>[e.x,e.y]),posicionesIniciales,
+assert.equal(JSON.stringify(Array.from(M.visibles(m),e=>[e.x,e.y])),JSON.stringify(posicionesIniciales),
   'los enemigos no se teletransportan ni persiguen antes de entrar en combate');
 assert(M.visibles(m).every(e=>e.state==='IDLE'),'esperan en IDLE sin atacar');
 assert.equal(m.fase,'avance','no hay oleadas por tiempo');
