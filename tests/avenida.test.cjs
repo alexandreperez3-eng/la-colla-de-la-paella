@@ -4,12 +4,23 @@ for(const f of ['src/config.js','src/pesol.js','src/mission.js'])
   vm.runInNewContext(fs.readFileSync(f,'utf8'),sandbox);
 const M=sandbox.Mision,cfg=sandbox.CONFIG;
 let m=M.crear(),p={x:120,y:365};
+assert.equal(M.visibles(m).length,5,'los cinco Pèsols ya existen en el mundo');
+const grupoInicial=m.grupos[0],segundoGrupo=m.grupos[1];
+const posicionesIniciales=M.visibles(m).map(e=>[e.x,e.y]);
 for(let i=0;i<900;i++)M.avanzar(m,p,.016,cfg);
+assert.deepEqual(Array.from(M.visibles(m),e=>[e.x,e.y]),posicionesIniciales,
+  'los enemigos no se teletransportan ni persiguen antes de entrar en combate');
+assert(M.visibles(m).every(e=>e.state==='IDLE'),'esperan en IDLE sin atacar');
 assert.equal(m.fase,'avance','no hay oleadas por tiempo');
 assert.equal(m.enemigos.length,0,'sin enemigos antes del punto de activación');
 p.x=639;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
+const camaraAntes=m.camara;
 p.x=640;M.avanzar(m,p,.016,cfg);
 assert.equal(m.fase,'combate');assert.equal(m.enemigos.length,2);
+assert.strictEqual(m.enemigos[0],grupoInicial[0],
+  'se activa el Pèsol que ya estaba visible, sin crear otro');
+assert.equal(m.camara,camaraAntes,
+  'la cámara no salta al llegar al primer encuentro');
 assert.equal(M.limiteX(m),1040,'no puede avanzar por la calle durante el combate');
 for(const e of m.enemigos) sandbox.Pesol.recibirGolpe(e,9,1,0,cfg.limites,cfg.pesol);
 M.avanzar(m,p,.016,cfg);
@@ -19,6 +30,8 @@ p.x=1106;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
 p.x=1579;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
 p.x=1580;M.avanzar(m,p,.016,cfg);
 assert.equal(m.fase,'combate');assert.equal(m.enemigos.length,3);
+assert.strictEqual(m.enemigos[0],segundoGrupo[0],
+  'el segundo grupo sigue siendo el que ya estaba colocado en la avenida');
 assert.equal(M.limiteX(m),2010);
 const a=m.enemigos[0],b=m.enemigos[1];a.x=b.x=1730;a.y=b.y=365;
 M.separar(m.enemigos,.04,cfg);
@@ -88,9 +101,14 @@ pasos(1);assert.equal(actual.fase,'tira-li');
 pasos(290);assert.match(boton('#objective').textContent,/completat/);
 assert(html.includes('src/avenida.js') && html.indexOf('src/avenida.js')<html.indexOf('src/game.js'));
 const motor=fs.readFileSync('src/game.js','utf8');
-assert(motor.includes('Mision.limiteX(m)')&&motor.includes("ctx.translate(-game.mission.camara,0)"));
+assert(motor.includes('Mision.limiteX(m)')&&motor.includes("ctx.translate(-Math.round(game.mission.camara),0)"));
+const render=motor.slice(motor.indexOf('  function render()'),motor.indexOf('    let last=0;'));
+assert(!render.includes('ctx.translate(offset.x,offset.y)'),
+  'la cámara no puede sacudirse verticalmente al recibir golpes');
+assert(render.includes('Mision.visibles(game.mission)'),
+  'el motor muestra a los Pèsols antes de activar su combate');
 assert(motor.includes('pesol_cabut_atlas_04c.png?v=04c'),'sprites aprobados intactos');
 boton('#reset').click();pasos(2);
 assert.equal(actual.fase,'avance');assert.equal(actual.enemigos.length,0);
 assert.equal(heroe.hp,mundo.CONFIG.personaje.vida);
-console.log('Acto 1.1: triggers por avance, bloqueo, cámara, multigolpe, TIRA-LI, final y reinicio.');
+console.log('Acto 1.1: Pèsols precolocados sin aparición brusca, cámara horizontal, encuentros por avance, TIRA-LI, multigolpe, final y reinicio.');
