@@ -9,9 +9,21 @@
     {id:'fugida',x:1580,barrera:2010,enemigos:[[1730,334],[1810,410],[1890,369]]}
   ]);
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-  function crear(){
-    return {indice:0,fase:'avance',enemigos:[],turno:0,camara:0,
+  function crear(cfg=window.CONFIG){
+    // Los Pèsols ya existen desde el inicio del tramo, como actores en el mundo.
+    // Solo se activa su IA cuando el jugador alcanza el encuentro.
+    const grupos=encuentros.map(encuentro=>encuentro.enemigos.map(([x,y])=>{
+      const e=Pesol.crear(cfg.pesol);
+      e.x=x;e.y=y;e.facing=-1;
+      return e;
+    }));
+    return {indice:0,fase:'avance',enemigos:[],grupos,turno:0,camara:0,
       camaraFija:0,completados:0};
+  }
+  function visibles(m){
+    // Pintar también los siguientes grupos antes de que empiece su combate.
+    // Los anteriores, ya derrotados, desaparecen al continuar.
+    return m.grupos.slice(Math.max(0,m.indice-(m.fase==='tira-li'?1:0))).flat();
   }
   function limiteX(m){
     return m.fase==='combate' ? encuentros[m.indice].barrera : anchoMundo-45;
@@ -28,17 +40,19 @@
     }else if(m.fase==='avance'){
       const siguiente=encuentros[m.indice];
       if(siguiente && jugador.x>=siguiente.x){
-        m.enemigos=siguiente.enemigos.map(([x,y])=>{
-          const e=Pesol.crear(config.pesol);
-          e.x=x;e.y=y;e.facing=-1;
-          return e;
-        });
+        // Activamos los personajes ya dibujados: ninguna creación ni teletransporte.
+        m.enemigos=m.grupos[m.indice];
         m.turno=0;
         m.camaraFija=m.camara;
         m.fase='combate';
       }else if(!siguiente && jugador.x>=anchoMundo-160){
         m.fase='final';
       }
+    }
+    // Los enemigos futuros respiran en IDLE, sin desplazarse ni atacar.
+    for(let i=m.indice;i<m.grupos.length;i++){
+      if(i===m.indice && m.fase==='combate')continue;
+      for(const e of m.grupos[i])if(e.hp>0)e.animationTime+=Math.max(0,delta);
     }
     const objetivo=m.fase==='combate' ? m.camaraFija :
       clamp(jugador.x-340,0,anchoMundo-anchoVista);
@@ -61,5 +75,5 @@
       b.y=clamp(b.y+my,l.arriba,l.abajo);
     }
   }
-  window.Mision=Object.freeze({crear,avanzar,separar,limiteX,encuentros,anchoMundo});
+  window.Mision=Object.freeze({crear,avanzar,separar,visibles,limiteX,encuentros,anchoMundo});
 })();
