@@ -41,3 +41,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;ma
 @media(pointer:coarse) and (orientation:landscape){
   .stage{max-width:calc((100dvh - 235px)*1.875);margin-inline:auto}
 }
+
+/* Cabecera estable: ni el título ni el objetivo cambian su altura al variar el texto. */
+header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,250px);gap:12px;align-items:center;min-height:61px}
+header>div:first-child{min-width:0}
+header h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .goal{display:flex;align-items:center;justify-content:center;height:44px;
+  min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;
+  text-overflow:ellipsis;text-align:center}
+@media(max-width:600px){
+  header{grid-template-columns:minmax(0,1fr);grid-template-rows:44px 36px;gap:4px;min-height:84px}
+  header .goal{height:36px}
+}
