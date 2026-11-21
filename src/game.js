@@ -430,7 +430,7 @@
     ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
   }
   function background(){
-    Avenida.dibujar(ctx,game.mission.camara);
+    Avenida.dibujar(ctx,Math.round(game.mission.camara));
   }
   function drawEnemy(e){
     const {x,y}=e;
@@ -789,12 +789,9 @@
   function render(){
     background();
     ctx.save();
-    ctx.translate(-game.mission.camara,0);
-    if(strongImpact.checked && game.shakeTime>0){
-      const offset=Feedback.sacudida(game.shakeTime,
-        config.feedbackRemate.sacudida,config.feedbackRemate.amplitud);
-      ctx.translate(offset.x,offset.y);
-    }
+    // Cámara de beat'em up: solo desplazamiento horizontal, sin temblores
+    // verticales ni redondeos fraccionales que hagan vibrar el pixel art.
+    ctx.translate(-Math.round(game.mission.camara),0);
     const drawHero=()=>{
       ctx.save();
       if(game.player.hurtCooldown>0 && Math.floor(game.elapsed*18)%2===0)
@@ -803,7 +800,7 @@
       ctx.restore();
     };
     // El eje de profundidad decide quién aparece delante.
-    const actores=[game.player,...game.mission.enemigos].sort((a,b)=>a.y-b.y);
+    const actores=[game.player,...Mision.visibles(game.mission)].sort((a,b)=>a.y-b.y);
     for(const actor of actores){
       if(actor===game.player)drawHero();
       else drawEnemy(actor);
