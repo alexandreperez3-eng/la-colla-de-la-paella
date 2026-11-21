@@ -23,3 +23,6 @@ La paella iba a prepararse al final de la Avinguda Mestre Serrano en Sueca. Los 
 
 ### Pruebas
 Ejecutar \`npm test\`. \`tests/avenida.test.cjs\` valida con un reloj manual la transición de estados, que los encuentros no aparecen sin avanzar, el límite del escenario, la cámara, el daño múltiple, el mensaje «TIRA-LI!», el reinicio y el cierre del primer tramo. Sigue pendiente una prueba manual en un iPad físico.
+
+### Ajuste de cámara y enemigos precolocados
+Los cinco Pèsols están situados en sus coordenadas desde el inicio del tramo. Se ven al entrar en su zona pero permanecen en IDLE hasta el punto de encuentro, cuando se activa su IA sin crear personajes ni cambiar posiciones. La cámara únicamente desplaza X y nunca aplica temblores verticales; en combate fija suavemente la posición horizontal. Se redondea la posición de la cámara al dibujar para evitar parpadeos del pixel art.
