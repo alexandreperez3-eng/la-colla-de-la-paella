@@ -117,7 +117,10 @@ assert.equal(actual.fase,'combate','segundo encuentro activado por la posición'
 assert.equal(actual.enemigos.length,3);
 for(const e of actual.enemigos)mundo.Pesol.recibirGolpe(e,9,1,0,mundo.CONFIG.limites,mundo.CONFIG.pesol);
 pasos(1);assert.equal(actual.fase,'tira-li');
-pasos(290);assert.match(boton('#objective').textContent,/completat/);
+let finIntentos=0;
+while(actual.fase!=='final' && finIntentos++<500)pasos(1);
+assert.equal(actual.fase,'final','el recorrido termina al llegar a Sales');
+assert.match(boton('#objective').textContent,/completat/);
 assert(html.includes('src/avenida.js') && html.indexOf('src/avenida.js')<html.indexOf('src/game.js'));
 const motor=fs.readFileSync('src/game.js','utf8');
 const css=fs.readFileSync('style.css','utf8');
