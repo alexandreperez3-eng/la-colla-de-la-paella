@@ -276,10 +276,10 @@
 
   function actualizarObjetivo(){
     const m=game.mission;
-    let msg='Avinguda Mestre Serrano · Persegueix els lladres';
-    if(m.fase==='combate')msg='Atura els Pèsols! · Combat '+(m.indice+1)+'/2';
+    let msg='Persegueix els lladres';
+    if(m.fase==='combate')msg='Combat '+(m.indice+1)+'/2 · Pèsols!';
     if(m.fase==='tira-li')msg='TIRA-LI! →';
-    if(m.fase==='final')msg='✅ Tram 1.1 completat · Cap a Sales';
+    if(m.fase==='final')msg='Cap a Sales · Tram completat';
     objective.textContent=msg;
   }
 
