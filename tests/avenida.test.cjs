@@ -13,25 +13,44 @@ assert.equal(JSON.stringify(Array.from(M.visibles(m),e=>[e.x,e.y])),JSON.stringi
 assert(M.visibles(m).every(e=>e.state==='IDLE'),'esperan en IDLE sin atacar');
 assert.equal(m.fase,'avance','no hay oleadas por tiempo');
 assert.equal(m.enemigos.length,0,'sin enemigos antes del punto de activación');
-p.x=639;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
-const camaraAntes=m.camara;
-p.x=640;M.avanzar(m,p,.016,cfg);
+// La primera aparición debe despertar en el borde de la pantalla,
+ // NO esperar hasta que el Llaurador alcance una X fija.
+p.x=405;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
+assert.equal(M.hayEnemigosEnPantalla(m),false,'todavía fuera de cámara');
+let activadoEnX=null,camaraAntes;
+for(let x=415;x<640;x+=8){
+  p.x=x;
+  camaraAntes=m.camara;
+  M.avanzar(m,p,.016,cfg);
+  if(m.fase==='combate'){activadoEnX=x;break;}
+}
 assert.equal(m.fase,'combate');assert.equal(m.enemigos.length,2);
+assert(activadoEnX<640,'detecta antes que el antiguo disparador de X=640');
+assert(Math.abs(m.camara-camaraAntes)<24,
+  'la cámara continúa suave, sin saltar ni congelarse al comenzar la lucha');
 assert.strictEqual(m.enemigos[0],grupoInicial[0],
   'se activa el Pèsol que ya estaba visible, sin crear otro');
-assert.equal(m.camara,camaraAntes,
-  'la cámara no salta al llegar al primer encuentro');
+sandbox.Pesol.avanzar(m.enemigos[0],p,.016,cfg.pesol,cfg.limites);
+assert.equal(m.enemigos[0].state,'CHASE',
+  'inicia la persecución inmediatamente al aparecer en pantalla');
 assert.equal(M.limiteX(m),1040,'no puede avanzar por la calle durante el combate');
 for(const e of m.enemigos) sandbox.Pesol.recibirGolpe(e,9,1,0,cfg.limites,cfg.pesol);
 M.avanzar(m,p,.016,cfg);
 assert.equal(m.fase,'tira-li');assert.equal(m.completados,1);
 assert.equal(M.limiteX(m),M.anchoMundo-45,'camino abierto después del combate');
 p.x=1106;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
-p.x=1579;M.avanzar(m,p,.016,cfg);assert.equal(m.fase,'avance');
-p.x=1580;M.avanzar(m,p,.016,cfg);
+let segundoActivadoX=null;
+for(let x=1114;x<1580;x+=9){
+  p.x=x;M.avanzar(m,p,.016,cfg);
+  if(m.fase==='combate'){segundoActivadoX=x;break;}
+}
 assert.equal(m.fase,'combate');assert.equal(m.enemigos.length,3);
+assert(segundoActivadoX<1580,'el segundo encuentro también despierta en pantalla');
 assert.strictEqual(m.enemigos[0],segundoGrupo[0],
   'el segundo grupo sigue siendo el que ya estaba colocado en la avenida');
+sandbox.Pesol.avanzar(m.enemigos[0],p,.016,cfg.pesol,cfg.limites);
+assert.equal(m.enemigos[0].state,'CHASE',
+  'el segundo grupo también persigue de inmediato');
 assert.equal(M.limiteX(m),2010);
 const a=m.enemigos[0],b=m.enemigos[1];a.x=b.x=1730;a.y=b.y=365;
 M.separar(m.enemigos,.04,cfg);
@@ -91,7 +110,7 @@ for(const e of actual.enemigos)mundo.Pesol.recibirGolpe(e,9,1,0,mundo.CONFIG.lim
 pasos(1);
 assert.equal(actual.fase,'tira-li');
 assert.match(boton('#objective').textContent,/TIRA-LI/);
-pasos(160);assert.equal(actual.fase,'avance');
+pasos(110);assert.equal(actual.fase,'avance');
 let intentos=0;
 while(actual.fase==='avance' && intentos++<200)pasos(1);
 assert.equal(actual.fase,'combate','segundo encuentro activado por la posición');
@@ -101,6 +120,13 @@ pasos(1);assert.equal(actual.fase,'tira-li');
 pasos(290);assert.match(boton('#objective').textContent,/completat/);
 assert(html.includes('src/avenida.js') && html.indexOf('src/avenida.js')<html.indexOf('src/game.js'));
 const motor=fs.readFileSync('src/game.js','utf8');
+const css=fs.readFileSync('style.css','utf8');
+assert(html.includes('<h1>Mestre Serrano</h1>'),'título corto de una línea');
+assert(css.includes('header h1{white-space:nowrap'), 'el título no salta de línea');
+assert(css.includes('header .goal{display:flex') &&
+  css.includes('white-space:nowrap'),'el objetivo mantiene un alto constante');
+assert(!motor.includes('m.camaraFija'),'la cámara no se congela en combate');
+assert.equal(mundo.CONFIG.pesol.deteccion,950,'detección ampliada para el borde visible');
 assert(motor.includes('Mision.limiteX(m)')&&motor.includes("ctx.translate(-Math.round(game.mission.camara),0)"));
 const render=motor.slice(motor.indexOf('  function render()'),motor.indexOf('    let last=0;'));
 assert(!render.includes('ctx.translate(offset.x,offset.y)'),
@@ -111,4 +137,4 @@ assert(motor.includes('pesol_cabut_atlas_04c.png?v=04c'),'sprites aprobados inta
 boton('#reset').click();pasos(2);
 assert.equal(actual.fase,'avance');assert.equal(actual.enemigos.length,0);
 assert.equal(heroe.hp,mundo.CONFIG.personaje.vida);
-console.log('Acto 1.1: Pèsols precolocados sin aparición brusca, cámara horizontal, encuentros por avance, TIRA-LI, multigolpe, final y reinicio.');
+console.log('Acto 1.1: título estable, IA desde borde visible, cámara lateral suave, TIRA-LI, multigolpe, final y reinicio.');
