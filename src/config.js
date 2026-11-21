@@ -12,7 +12,7 @@ window.CONFIG = {
   arroz: {x: 745, y: 369, radioRecogida: 53},
   // Primer esbirro: poco resistente, rápido, con cabotada anunciada.
   pesol: {x: 535, y: 365, vida: 2, semiancho: 27, semiprofundidad: 13,
-    velocidad: 148, deteccion: 460, distanciaAtaque: 63, carrilAtaque: 38,
+    velocidad: 148, deteccion: 950, distanciaAtaque: 63, carrilAtaque: 38,
     preparacion: 0.34, duracionAtaque: 0.38, instanteImpacto: 0.19,
     embestida: 178, alcance: 67, recuperacion: 0.52, aturdimiento: 0.32},
   ataque: {
