@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#143b3b" />
-  <title>La Colla de la Paella · Paso 04C</title>
-  <link rel="stylesheet" href="style.css?v=04c" />
+  <title>La Colla de la Paella · Acto 1.1</title>
+  <link rel="stylesheet" href="style.css?v=acto1c" />
 </head>
 <body>
 <main class="game-shell">
   <header>
-    <div><small>LA COLLA DE LA PAELLA</small><h1>Camí de l'Horta <span>· PASO 04C</span></h1></div>
-    <div class="goal" id="objective">🟢 Derrota al Pèsol Cabut</div>
+    <div><small>LA COLLA DE LA PAELLA · ACTE 1</small><h1>Mestre Serrano</h1></div>
+    <div class="goal" id="objective" aria-live="polite">Persegueix els lladres</div>
   </header>
   <div class="stage"><canvas id="game" width="900" height="480" aria-label="Escenario del juego: llaurador en l'Horta"></canvas></div>
   <section class="controls" aria-label="Controles del juego">
@@ -24,21 +24,25 @@
       <button id="attack" class="attack-button" aria-label="Encadenar combo de cuatro golpes">⚔️<span>COMBO ×4</span></button>
     </div>
     <div class="lesson">
+      <button class="reset" id="reset">↺ Volver a empezar</button>
+      <details><summary>Ajustes y controles</summary>
       <label for="speed">Velocidad del llaurador: <output id="speed-value">210</output> px/s</label>
       <input id="speed" type="range" min="100" max="420" step="10" value="210" />
       <div class="hint">Pulsa COMBO cuatro veces, incluso rápido: izquierda → derecha → patada → doble descendente. WASD/flechas · J/espacio · K para Remolí.</div>
-      <div class="lesson-actions"><button class="reset" id="reset">↺ Volver a empezar</button><label class="hitbox-option"><input type="checkbox" id="combo-pack" checked> Pack unificado: IDLE, WALK y 4 golpes (comparar)</label><label class="hitbox-option"><input type="checkbox" id="descendente-sprite" checked> Remate descendente (comparar)</label><label class="hitbox-option"><input type="checkbox" id="remate-fiel" checked> Remate con el llaurador original (03Q)</label><label class="hitbox-option"><input type="checkbox" id="strong-impact" checked> Impacto reforzado (comparar)</label><label class="hitbox-option"><input type="checkbox" id="debug-hitboxes"> Mostrar hitboxes</label><label class="hitbox-option"><input type="checkbox" id="walk-v2" checked> WALK con cara corregida (comparar)</label><label class="hitbox-option"><input type="checkbox" id="slash-effects" checked> Estelas de ataques anteriores</label><label class="hitbox-option"><input type="checkbox" id="left-sprite" checked> Corbellada izquierda: sprite nuevo</label><label class="hitbox-option"><input type="checkbox" id="right-sprite" checked> Corbellada derecha: sprite nuevo</label><label class="hitbox-option"><input type="checkbox" id="kick-sprite" checked> Patada: sprite nuevo</label></div>
+      <div class="lesson-actions"><label class="hitbox-option"><input type="checkbox" id="combo-pack" checked> Pack unificado: IDLE, WALK y 4 golpes (comparar)</label><label class="hitbox-option"><input type="checkbox" id="descendente-sprite" checked> Remate descendente (comparar)</label><label class="hitbox-option"><input type="checkbox" id="remate-fiel" checked> Remate con el llaurador original (03Q)</label><label class="hitbox-option"><input type="checkbox" id="strong-impact" checked> Impacto reforzado (comparar)</label><label class="hitbox-option"><input type="checkbox" id="debug-hitboxes"> Mostrar hitboxes</label><label class="hitbox-option"><input type="checkbox" id="walk-v2" checked> WALK con cara corregida (comparar)</label><label class="hitbox-option"><input type="checkbox" id="slash-effects" checked> Estelas de ataques anteriores</label><label class="hitbox-option"><input type="checkbox" id="left-sprite" checked> Corbellada izquierda: sprite nuevo</label><label class="hitbox-option"><input type="checkbox" id="right-sprite" checked> Corbellada derecha: sprite nuevo</label><label class="hitbox-option"><input type="checkbox" id="kick-sprite" checked> Patada: sprite nuevo</label></div></details>
     </div>
   </section>
-  <footer><span id="coordinates">Posición: 120, 365</span><strong id="state">Estado: IDLE</strong><strong id="combo">Combo: —</strong><strong id="animation-label">Sprite: IDLE 1/4</strong><span id="status">Derrota al ladrón antes de recoger el arroz.</span></footer>
+  <footer><span id="coordinates">Posición: 120, 365</span><strong id="state">Estado: IDLE</strong><strong id="combo">Combo: —</strong><strong id="animation-label">Sprite: IDLE 1/4</strong><span id="status">Ens han furtat els ingredients!</span></footer>
 </main>
-<script src="src/config.js?v=04c" defer></script>
+<script src="src/config.js?v=acto1c" defer></script>
 <script src="src/combat.js?v=04c" defer></script>
 <script src="src/animation.js?v=04c" defer></script>
 <script src="src/combo.js?v=04c" defer></script>
 <script src="src/feedback.js?v=04c" defer></script>
 <script src="src/remate.js?v=04c" defer></script>
-<script src="src/pesol.js?v=04c" defer></script>
-<script src="src/game.js?v=04c" defer></script>
+<script src="src/pesol.js?v=acto1c" defer></script>
+<script src="src/mission.js?v=acto1c" defer></script>
+<script src="src/avenida.js?v=acto1c" defer></script>
+<script src="src/game.js?v=acto1c" defer></script>
 </body>
 </html>
