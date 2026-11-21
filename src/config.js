@@ -8,7 +8,7 @@ window.CONFIG = {
     yInicial: 365,
     vida: 6
   },
-  limites: {izquierda: 30, derecha: 870, arriba: 284, abajo: 444},
+  limites: {izquierda: 30, derecha: 2635, arriba: 284, abajo: 444},
   arroz: {x: 745, y: 369, radioRecogida: 53},
   // Primer esbirro: poco resistente, rápido, con cabotada anunciada.
   pesol: {x: 535, y: 365, vida: 2, semiancho: 27, semiprofundidad: 13,
