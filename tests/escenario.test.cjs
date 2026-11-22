@@ -13,8 +13,9 @@ class Arte {
       this.naturalHeight = bytes.readUInt32BE(20);
     } else if (archivo.endsWith('.jpg')) {
       assert.equal(bytes.readUInt16BE(0), 0xffd8, 'JPEG vàlid');
-      const sof = bytes.indexOf(Buffer.from([0xff, 0xc0]));
-      assert(sof > 0, 'JPEG base amb marcador SOF');
+      const sof = Math.max(bytes.indexOf(Buffer.from([0xff, 0xc0])),
+        bytes.indexOf(Buffer.from([0xff, 0xc2])));
+      assert(sof > 0, 'JPEG amb marcador SOF0 o SOF2');
       this.naturalHeight = bytes.readUInt16BE(sof + 5);
       this.naturalWidth = bytes.readUInt16BE(sof + 7);
     } else {
@@ -55,7 +56,7 @@ const ctx = {
       assert(x <= 0 && y <= 0);
       cieloHasta = x + w;
     }
-    if (img.nombre === 'locals-go-terrat-concepte.jpg') {
+    if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg') {
       localesEnCuadro++;
       assert.equal(y, 0, 'la fachada queda alineada con los edificios');
     }
@@ -82,10 +83,10 @@ const suelo = fs.readFileSync('assets/escenarios/mestre-serrano/passeig.svg', 'u
 assert(!/blur|feGaussianBlur|filter=/.test(suelo), 'juntas nítidas, sin difuminados');
 assert.match(suelo, /width="600" height="231"/, 'módulo del suelo de ancho exacto');
 // Art aprovat: ara es reprodueixen els píxels de la il·lustració, no formes SVG.
-const art = fs.readFileSync('assets/escenarios/mestre-serrano/locals-go-terrat-concepte.jpg');
+const art = fs.readFileSync('assets/escenarios/mestre-serrano/locals-go-terrat-escala-1.1h.jpg');
 assert.equal(art.readUInt16BE(0), 0xffd8, 'asset JPEG real');
-assert(art.length > 40000, 'el bocet no és una icona plana ni un substitut de baixa resolució');
-const imatge = imagenes.find(img => img.nombre === 'locals-go-terrat-concepte.jpg');
+assert(art.length > 40000, 'el bocet reescalat no és una icona plana ni un substitut de baixa resolució');
+const imatge = imagenes.find(img => img.nombre === 'locals-go-terrat-escala-1.1h.jpg');
 assert.equal(imatge.naturalWidth, 1020, 'amplada validada del fons del tram');
 assert.equal(imatge.naturalHeight, 250, 'alçada validada del fons del tram');
 const avenida = fs.readFileSync('src/avenida.js', 'utf8');
@@ -94,4 +95,4 @@ for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1g: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
+console.log('Escenario 1.1h: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
