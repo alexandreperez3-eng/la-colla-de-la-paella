@@ -25,9 +25,12 @@ async function main() {
       };
     });
     await page.goto('http://127.0.0.1:4173/');
-    await page.waitForFunction(() => window.laminasDibujadas.size === 4);
+    await page.waitForFunction(() => window.laminasDibujadas.size >= 5);
     assert.deepEqual(await page.evaluate(() => [...window.laminasDibujadas].sort()),
-      ['decorats.png', 'facanes.png', 'horitzo.png', 'paviment.png']);
+      ['banc.svg', 'decorats.png', 'facanes.png', 'horitzo.png', 'passeig.svg']);
+
+    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat.svg')),
+      'los locales no aparecen al principio');
 
     const geometria = () => page.evaluate(() =>
       ['header', '#game', '.pad', '#attack', '#special'].map(selector => {
@@ -56,7 +59,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#coordinates').textContent === 'Posición: 120, 365');
     assert.equal(await page.locator('#objective').textContent(), 'Persegueix els lladres');
     assert.deepEqual(errors, []);
-    console.log('WebKit en iPad emulado: cuatro PNG dibujados, controles táctiles, combate, cabecera estable y reinicio.');
+    console.log('WebKit en iPad emulado: arte PNG/SVG de paseo dibujado, controles táctiles, combate, cabecera estable y reinicio.');
   } finally {
     await browser.close();
   }
