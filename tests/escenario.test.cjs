@@ -49,7 +49,7 @@ const ctx = {
       assert(x <= 0 && y <= 0);
       cieloHasta = x + w;
     }
-    if (img.nombre === 'locals-go-terrat.svg') {
+    if (img.nombre === 'locals-go-terrat-refinats.svg') {
       localesEnCuadro++;
       assert.equal(y, 0, 'la fachada queda alineada con los edificios');
     }
@@ -75,10 +75,19 @@ assert(!imagenes.some(i => i.nombre === 'paviment.png'),
 const suelo = fs.readFileSync('assets/escenarios/mestre-serrano/passeig.svg', 'utf8');
 assert(!/blur|feGaussianBlur|filter=/.test(suelo), 'juntas nítidas, sin difuminados');
 assert.match(suelo, /width="600" height="231"/, 'módulo del suelo de ancho exacto');
+// Regressió visual estructural: la nova làmina conserva les mides aprovades
+// i els dos accessos oberts, sense fotos externes ni canvis al sòl.
+const art = fs.readFileSync('assets/escenarios/mestre-serrano/locals-go-terrat-refinats.svg', 'utf8');
+assert.match(art, /viewBox="0 0 1020 250"/, 'mateixa escala del tram 1.1e');
+assert.match(art, />TERRAT<\/text>/, 'rètol del Terrat visible');
+assert.match(art, />GO!<\/text>/, 'GO! també conserva el rètol de la façana');
+assert.match(art, /Portes de cristall obertes/, 'entrades obertes, no persianes');
+assert.match(art, /Dos membres de seguretat/, 'personatges ambientals de fons');
+assert(!/<image\b|http:\/\/(?!www\.w3\.org)/.test(art), 'art vectorial local sense fotos ni dependències externes');
 const avenida = fs.readFileSync('src/avenida.js', 'utf8');
 assert(!avenida.includes("tipo: 'placa'"), 'sin cartel callejero innecesario');
 for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1e: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
+console.log('Escenario 1.1f: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
