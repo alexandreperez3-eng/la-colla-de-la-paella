@@ -49,7 +49,7 @@ const ctx = {
       assert(x <= 0 && y <= 0);
       cieloHasta = x + w;
     }
-    if (img.nombre === 'locals-go-terrat.svg') {
+    if (img.nombre === 'locals-go-terrat-refinats.svg') {
       localesEnCuadro++;
       assert.equal(y, 0, 'la fachada queda alineada con los edificios');
     }
@@ -81,4 +81,4 @@ for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1e: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
+console.log('Escenario 1.1f: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
