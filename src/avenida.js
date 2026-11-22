@@ -1,4 +1,4 @@
-// Acte 1.1e · Passeig de Mestre Serrano: la GO! i El Terrat apareixen en avançar.
+// Acte 1.1f · Passeig de Mestre Serrano: la GO! i El Terrat apareixen en avançar.
 (() => {
   'use strict';
 
@@ -9,7 +9,7 @@
     casesBaixes: ['facanes', 281, 220, 369, 202],
     casesBlaves: ['facanes', 317, 0, 192, 220],
     passeig: ['passeig.svg', 0, 0, 600, 231],
-    locals: ['locals-go-terrat.svg', 0, 0, 1020, 250],
+    locals: ['locals-go-terrat-refinats.svg', 0, 0, 1020, 250],
     banc: ['banc.svg', 0, 0, 176, 90],
     arbre: ['decorats', 0, 0, 146, 150],
     parada: ['decorats', 148, 0, 191, 163],
@@ -21,7 +21,7 @@
   window.Avenida = Escenario.crear({
     ruta: 'assets/escenarios/mestre-serrano/',
     laminas: ['horitzo', 'facanes', 'decorats', 'passeig.svg',
-      'locals-go-terrat.svg', 'banc.svg'],
+      'locals-go-terrat-refinats.svg', 'banc.svg'],
     aceraY: 249,
     recortes,
     capas: [
