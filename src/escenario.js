@@ -6,7 +6,7 @@
     const imagenes = {};
     for (const nombre of laminas) {
       const imagen = new Image();
-      imagen.src = ruta + nombre + '.png';
+      imagen.src = ruta + nombre + (nombre.endsWith('.svg') ? '' : '.png');
       imagenes[nombre] = imagen;
     }
 
