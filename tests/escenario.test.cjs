@@ -72,7 +72,7 @@ const ctx = {
       if (camaraActual === 0) casesAlPrincipi.push([x, x + w]);
     }
     if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg') {
-      assert.equal(w, 1020, 'l'art conceptual dels locals continua a la mida validada');
+      assert.equal(w, 1020, "l'art conceptual dels locals continua a la mida validada");
       assert.equal(h, 250);
     }
     if (img.nombre === 'banc.svg') bancosEnCuadro++;
