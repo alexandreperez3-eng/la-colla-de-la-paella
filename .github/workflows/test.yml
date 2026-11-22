@@ -23,7 +23,7 @@ jobs:
         run: npm test
 
   escenario-webkit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -33,7 +33,7 @@ jobs:
           package-manager-cache: false
       - name: Preparar WebKit para la prueba táctil
         run: |
-          npm install --prefix "$RUNNER_TEMP/navegador" playwright@1.55.0 --no-package-lock
+          npm install --prefix "$RUNNER_TEMP/navegador" playwright@1.62.1 --no-package-lock
           "$RUNNER_TEMP/navegador/node_modules/.bin/playwright" install --with-deps webkit
       - name: Probar la avenida con el perfil de iPad
         run: |
