@@ -258,6 +258,7 @@
   <path d="M-8 -60Q-10 -73 3 -71Q11 -71 10 -59Q6 -66 0 -65Q-7 -66 -8 -60" fill="#342a40"/>
   <path d="M-3 -57h1M4 -57h1" stroke="#2c2d36" stroke-width="1.7"/>
 </g>
+<!-- Dos membres de seguretat a les entrades, com al concepte -->
 <g transform="translate(470 248)" stroke-linecap="round" stroke-linejoin="round">
  <ellipse cy="-1" rx="15" ry="3" fill="#241a29" opacity=".32"/>
  <path d="M-7 -22L-7 0M7 -22L8 0" stroke="#252e43" stroke-width="8"/>
