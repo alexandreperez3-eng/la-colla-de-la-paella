@@ -432,6 +432,16 @@
   function background(){
     Avenida.dibujar(ctx,Math.round(game.mission.camara));
   }
+  // Una vora prima conserva el contrast de les etiquetes sobre persianes i tendals.
+  function rotulo(texto, x, y, borde) {
+    ctx.save();
+    ctx.strokeStyle = borde;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(texto, x, y);
+    ctx.fillText(texto, x, y);
+    ctx.restore();
+  }
   function drawEnemy(e){
     const {x,y}=e;
     if(e.state===Pesol.ESTADOS.KO && e.stateTime>2.3)return;
@@ -463,7 +473,7 @@
     rect(x-28,y-84,56,6,'#4b342a');
     rect(x-28,y-84,56*e.hp/config.pesol.vida,6,'#9bd948');
     ctx.textAlign='center';ctx.font='bold 12px system-ui';
-    ctx.fillStyle='#402c23';ctx.fillText('PÈSOL CABUT',x,y-92);
+    ctx.fillStyle='#402c23';rotulo('PÈSOL CABUT',x,y-92,'#f1deb2');
   }
 
     // Dibujo provisional: una corbella por mano (mango + hoja curva).
@@ -641,7 +651,7 @@
       if(usingCombo && !usingPackAttack)drawComboEffects(p,usingKick);
       ctx.restore();
       ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
-      ctx.fillText('LLAURADOR',p.x,p.y-159);
+      rotulo('LLAURADOR',p.x,p.y-159,'#40342e');
       return;
     }
     const {x,y,facing,walking,state}=p;
@@ -713,7 +723,7 @@
     }
     ctx.restore();
     ctx.fillStyle='#fff0bb';ctx.font='bold 13px system-ui';ctx.textAlign='center';
-    ctx.fillText('LLAURADOR',x,y-159);
+    rotulo('LLAURADOR',x,y-159,'#40342e');
   }
 
   // Visualizamos sobre el torso la geometría que usa el combate.
@@ -826,7 +836,7 @@
         ctx.textAlign='right';ctx.font='bold 36px monospace';
         ctx.fillStyle=Math.floor(game.elapsed*3)%2?'#f7e3a7':'#fff9dc';
         ctx.shadowColor='#644a28';ctx.shadowBlur=6;
-        ctx.fillText('TIRA-LI! →',865,235);
+        rotulo('TIRA-LI! →',865,235,'#4d392e');
         ctx.shadowBlur=0;
       }
     }
