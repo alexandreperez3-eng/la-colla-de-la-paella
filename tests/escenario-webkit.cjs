@@ -29,15 +29,15 @@ async function main() {
     assert.deepEqual(await page.evaluate(() => [...window.laminasDibujadas].sort()),
       ['banc.svg', 'decorats.png', 'facanes.png', 'horitzo.png', 'passeig.svg']);
 
-    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-concepte.jpg')),
+    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-escala-1.1h.jpg')),
       'los locales no aparecen al principio');
 
-    // Cargar explícitamente el tramo avanzado: el SVG debe decodificar en WebKit.
+    // Cargar explícitamente el tramo avanzado: el JPEG del boceto escalado debe decodificar en WebKit.
     await page.waitForFunction(() => {
       const prueba = document.createElement('canvas');
       prueba.width = 900; prueba.height = 480;
       window.Avenida.dibujar(prueba.getContext('2d'), 1400);
-      return window.laminasDibujadas.has('locals-go-terrat-concepte.jpg');
+      return window.laminasDibujadas.has('locals-go-terrat-escala-1.1h.jpg');
     });
 
     const geometria = () => page.evaluate(() =>
