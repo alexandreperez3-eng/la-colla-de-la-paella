@@ -29,7 +29,7 @@ async function main() {
     assert.deepEqual(await page.evaluate(() => [...window.laminasDibujadas].sort()),
       ['banc.svg', 'decorats.png', 'facanes.png', 'horitzo.png', 'passeig.svg']);
 
-    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-refinats.svg')),
+    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-concepte.jpg')),
       'los locales no aparecen al principio');
 
     // Cargar explícitamente el tramo avanzado: el SVG debe decodificar en WebKit.
@@ -37,7 +37,7 @@ async function main() {
       const prueba = document.createElement('canvas');
       prueba.width = 900; prueba.height = 480;
       window.Avenida.dibujar(prueba.getContext('2d'), 1400);
-      return window.laminasDibujadas.has('locals-go-terrat-refinats.svg');
+      return window.laminasDibujadas.has('locals-go-terrat-concepte.jpg');
     });
 
     const geometria = () => page.evaluate(() =>
