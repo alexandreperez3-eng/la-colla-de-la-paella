@@ -25,7 +25,7 @@
     cambiar(e,e.hp===0?ESTADOS.KO:ESTADOS.HURT);
     return true;
   }
-  function avanzar(e,p,delta,cfg,limites){
+  function avanzar(e,p,delta,cfg,limites,puedeAtacar=true){
     const resultado={golpeJugador:false};
     if(delta<=0)return resultado;
     e.flash=Math.max(0,e.flash-delta);
@@ -40,7 +40,7 @@
         break;
       case ESTADOS.CHASE:{
         if(distancia>cfg.deteccion*1.28){cambiar(e,ESTADOS.IDLE);break;}
-        if(Math.abs(dx)<=cfg.distanciaAtaque && Math.abs(dy)<=cfg.carrilAtaque){
+        if(puedeAtacar && Math.abs(dx)<=cfg.distanciaAtaque && Math.abs(dy)<=cfg.carrilAtaque){
           e.facing=dx>=0?1:-1;
           cambiar(e,ESTADOS.PRE_ATTACK);break;
         }
