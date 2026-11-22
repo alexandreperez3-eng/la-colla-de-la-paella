@@ -32,6 +32,14 @@ async function main() {
     assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat.svg')),
       'los locales no aparecen al principio');
 
+    // Cargar explícitamente el tramo avanzado: el SVG debe decodificar en WebKit.
+    await page.waitForFunction(() => {
+      const prueba = document.createElement('canvas');
+      prueba.width = 900; prueba.height = 480;
+      window.Avenida.dibujar(prueba.getContext('2d'), 1400);
+      return window.laminasDibujadas.has('locals-go-terrat.svg');
+    });
+
     const geometria = () => page.evaluate(() =>
       ['header', '#game', '.pad', '#attack', '#special'].map(selector => {
         const {x, y, width, height} = document.querySelector(selector).getBoundingClientRect();
