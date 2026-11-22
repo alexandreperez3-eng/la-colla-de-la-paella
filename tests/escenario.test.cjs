@@ -37,6 +37,8 @@ for (const ruta of ['src/escenario.js', 'src/avenida.js'])
 const ancho = 900, alto = 480;
 let sueloHasta, cieloHasta, llamadas, localesEnCuadro, bancosEnCuadro;
 let localesAlInicio = null, localesAlAvanzar = false, maxLlamadas = 0;
+let camaraActual = 0;
+const casesAlPrincipi = [];
 const ctx = {
   canvas: {width: ancho, height: alto},
   fillRect() {},
@@ -60,10 +62,24 @@ const ctx = {
       localesEnCuadro++;
       assert.equal(y, 0, 'la fachada queda alineada con los edificios');
     }
+    if (img.nombre === 'facanes.png') {
+      // Les façanes mantenen la proporció del seu atlas i reposen al
+      // mateix nivell que els accessos de GO / El Terrat.
+      assert.equal(y + h, 250, 'cases i locals comparteixen la línia de planta baixa');
+      assert(Math.abs(w / sw - h / sh) < 0.01,
+        'ampliació residencial proporcional, sense deformar portes ni finestres');
+      assert(w / sw >= 1.34 && w / sw <= 1.36, 'les cases augmenten un 35%');
+      if (camaraActual === 0) casesAlPrincipi.push([x, x + w]);
+    }
+    if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg') {
+      assert.equal(w, 1020, 'l'art conceptual dels locals continua a la mida validada');
+      assert.equal(h, 250);
+    }
     if (img.nombre === 'banc.svg') bancosEnCuadro++;
   }
 };
 for (let camara = 0; camara <= 1780; camara++) {
+  camaraActual = camara;
   sueloHasta = cieloHasta = llamadas = localesEnCuadro = bancosEnCuadro = 0;
   mundo.Avenida.dibujar(ctx, camara);
   assert(sueloHasta >= ancho && cieloHasta >= ancho, 'cobertura de extremo a extremo');
@@ -74,6 +90,9 @@ for (let camara = 0; camara <= 1780; camara++) {
   if (camara >= 1100 && localesEnCuadro > 0) localesAlAvanzar = true;
   maxLlamadas = Math.max(llamadas, maxLlamadas);
 }
+assert.equal(casesAlPrincipi.length, 2, 'dos trams de cases al primer visor');
+assert(casesAlPrincipi[0][1] + 50 < casesAlPrincipi[1][0],
+  'es manté una obertura cap a l horitzó entre les façanes');
 assert.equal(localesAlInicio, 0, 'GO! y El Terrat no se ven desde el comienzo');
 assert(localesAlAvanzar, 'GO! y El Terrat aparecen al avanzar lateralmente');
 assert.equal(imagenes.length, 6, 'las seis láminas se cargan una sola vez');
@@ -95,4 +114,4 @@ for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1h: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);
+console.log('Escenario 1.1i: paseo sin cortes en 1.781 cámaras, GO!/El Terrat al avanzar y bancos. Dibujos/cuadro máx.:', maxLlamadas);

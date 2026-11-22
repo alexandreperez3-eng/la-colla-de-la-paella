@@ -1,4 +1,4 @@
-// Acte 1.1h · Passeig de Mestre Serrano: la GO! i El Terrat apareixen en avançar.
+// Acte 1.1i · Passeig de Mestre Serrano: la GO! i El Terrat apareixen en avançar.
 (() => {
   'use strict';
 
@@ -18,6 +18,19 @@
     sales: ['decorats', 0, 221, 153, 97]
   };
 
+  // Les portes de les cases de 1.1h quedaven molt més menudes que
+  // les del GO / El Terrat. Reescalem només el barri residencial,
+  // mantenint la base dels edificis a la línia de vorera (y=250).
+  // El carrer i les discoteques conserven la seua escala aprovada.
+  const escalaCases = 1.35;
+  const plantaBaixaY = 250;
+  function casa(tipo, x) {
+    const [, , , originalW, originalH] = recortes[tipo];
+    const ancho = Math.round(originalW * escalaCases);
+    const alto = Math.round(originalH * escalaCases);
+    return {tipo, x, y: plantaBaixaY - alto, ancho, alto};
+  }
+
   window.Avenida = Escenario.crear({
     ruta: 'assets/escenarios/mestre-serrano/',
     laminas: ['horitzo', 'facanes', 'decorats', 'passeig.svg',
@@ -28,11 +41,13 @@
       {factor: 0.11, piezas: [{tipo: 'cel', x: 0, y: -8}]},
       // Els locals es mantenen en un tram del món, no enganxats a la càmera.
       {factor: 0.76, piezas: [
-        {tipo: 'cases', x: -73, y: 48},
-        {tipo: 'balcons', x: 669, y: 30},
-        {tipo: 'casesBaixes', x: 1352, y: 48},
-        {tipo: 'casesBlaves', x: 1721, y: 30},
-        {tipo: 'balcons', x: 2010, y: 30},
+        // Deixem el buit del campanar entre les dos primeres cases.
+        // Les següents continuen darrere dels locals, igual que en 1.1h.
+        casa('cases', -265),
+        casa('balcons', 700),
+        casa('casesBaixes', 1578),
+        casa('casesBlaves', 2076),
+        casa('balcons', 2335),
         {tipo: 'locals', x: 1450, y: 0, ancho: 1020, alto: 250}
       ]},
       // Rajola de passeig: sense calçada, vorada ni tall entre mòduls.
