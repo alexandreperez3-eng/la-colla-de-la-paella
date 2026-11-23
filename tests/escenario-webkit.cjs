@@ -25,19 +25,19 @@ async function main() {
       };
     });
     await page.goto('http://127.0.0.1:4173/');
-    await page.waitForFunction(() => window.laminasDibujadas.size >= 5);
+    await page.waitForFunction(() => window.laminasDibujadas.size >= 6);
     assert.deepEqual(await page.evaluate(() => [...window.laminasDibujadas].sort()),
-      ['banc.svg', 'decorats.png', 'facanes.png', 'horitzo.png', 'passeig.svg']);
+      ['arbre-alt-passeig.png', 'banc.svg', 'decorats.png', 'facanes.png', 'horitzo.png', 'passeig.svg']);
 
-    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-escala-1.1h.jpg')),
+    assert(!await page.evaluate(() => window.laminasDibujadas.has('locals-go-terrat-sense-arbres.png')),
       'los locales no aparecen al principio');
 
-    // Cargar explícitamente el tramo avanzado: el JPEG del boceto escalado debe decodificar en WebKit.
+    // Cargar explícitamente el tramo avanzado para comprobar la nueva fachada.
     await page.waitForFunction(() => {
       const prueba = document.createElement('canvas');
       prueba.width = 900; prueba.height = 480;
       window.Avenida.dibujar(prueba.getContext('2d'), 1400);
-      return window.laminasDibujadas.has('locals-go-terrat-escala-1.1h.jpg');
+      return window.laminasDibujadas.has('locals-go-terrat-sense-arbres.png');
     });
 
     const canvi = await page.evaluate(() => {
@@ -53,7 +53,8 @@ async function main() {
       };
       const abans = imatge(0);
       const despres = imatge(0.31);
-      const pixels = {terrat: 0, go: 0, fora: 0};
+      const grupsDeFora = [[126, 184], [355, 425], [457, 492], [591, 624], [643, 700]];
+      const pixels = {terrat: 0, go: 0, grups: [0, 0, 0, 0, 0], fixos: 0};
       for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
@@ -63,13 +64,19 @@ async function main() {
           const localX = x - localsX;
           if (dins && localX >= 236 && localX < 286) pixels.terrat++;
           else if (dins && localX >= 499 && localX < 567) pixels.go++;
-          else pixels.fora++;
+          else {
+            const grup = y >= 164 && y < 214 ?
+              grupsDeFora.findIndex(([inici, fi]) => localX >= inici && localX < fi) : -1;
+            if (grup >= 0) pixels.grups[grup]++;
+            else pixels.fixos++;
+          }
         }
       }
       return pixels;
     });
     assert(canvi.terrat > 100 && canvi.go > 100, 'els dos interiors canvien amb el temps');
-    assert.equal(canvi.fora, 0, 'els rètols, la façana i el paviment són estables');
+    assert(canvi.grups.every(pixels => pixels > 20), 'els grups de fora i els porters es mouen');
+    assert.equal(canvi.fixos, 0, 'els rètols, la façana i el paviment són estables');
 
     const geometria = () => page.evaluate(() =>
       ['header', '#game', '.pad', '#attack', '#special'].map(selector => {
@@ -98,7 +105,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#coordinates').textContent === 'Posición: 120, 365');
     assert.equal(await page.locator('#objective').textContent(), 'Persegueix els lladres');
     assert.deepEqual(errors, []);
-    console.log('WebKit en iPad emulado: paseo e interiores animados, controles táctiles, combate, cabecera estable y reinicio.');
+    console.log('WebKit en iPad emulado: paseo, árboles y animación dentro y fuera, controles táctiles, combate y reinicio.');
   } finally {
     await browser.close();
   }
