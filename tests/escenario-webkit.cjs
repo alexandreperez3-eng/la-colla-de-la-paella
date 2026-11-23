@@ -52,7 +52,7 @@ async function main() {
         return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
       };
       const abans = imatge(0);
-      const despres = imatge(0.31);
+      const despres = imatge(2.1);
       const grupsDeFora = [[126, 184], [355, 425], [457, 492], [591, 624], [643, 700]];
       const pixels = {terrat: 0, go: 0, grups: [0, 0, 0, 0, 0], fixos: 0};
       for (let y = 0; y < canvas.height; y++) {
@@ -75,7 +75,7 @@ async function main() {
       return pixels;
     });
     assert(canvi.terrat > 100 && canvi.go > 100, 'els dos interiors canvien amb el temps');
-    assert(canvi.grups.every(pixels => pixels > 20), 'els grups de fora i els porters es mouen');
+    assert(canvi.grups.every(pixels => pixels > 20), 'el públic de fora i els porters fan gestos independents');
     assert.equal(canvi.fixos, 0, 'els rètols, la façana i el paviment són estables');
 
     const geometria = () => page.evaluate(() =>
@@ -105,7 +105,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#coordinates').textContent === 'Posición: 120, 365');
     assert.equal(await page.locator('#objective').textContent(), 'Persegueix els lladres');
     assert.deepEqual(errors, []);
-    console.log('WebKit en iPad emulado: paseo, árboles y animación dentro y fuera, controles táctiles, combate y reinicio.');
+    console.log('WebKit en iPad emulado: paseo, hueco con horizonte y figurantes independientes, controles táctiles, combate y reinicio.');
   } finally {
     await browser.close();
   }
