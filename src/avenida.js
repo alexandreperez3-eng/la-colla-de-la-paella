@@ -1,16 +1,18 @@
-// Acte 1.1j · Passeig de Mestre Serrano.
+// Acte 1.1k · Passeig de Mestre Serrano.
 (() => {
   'use strict';
 
+  const artLocals = 'locals-go-terrat-sense-arbres.png';
+  const artArbre = 'arbre-alt-passeig.png';
   const recortes = {
     cel: ['horitzo', 0, 0, 1114, 277],
     cases: ['facanes', 0, 220, 650, 202],
     // Tall al límit del portal, abans de l'últim bloc de pisos de l'atles.
     balcons: ['facanes', 0, 0, 510, 220],
     passeig: ['passeig.svg', 0, 0, 600, 231],
-    locals: ['locals-go-terrat-escala-1.1h.jpg', 0, 0, 1020, 250],
+    locals: [artLocals, 0, 0, 1020, 250],
     banc: ['banc.svg', 0, 0, 176, 90],
-    arbre: ['decorats', 0, 0, 146, 150],
+    arbre: [artArbre, 0, 0, 200, 400],
     parada: ['decorats', 148, 0, 191, 163],
     fanal: ['decorats', 342, 0, 33, 165],
     banderins: ['decorats', 0, 172, 183, 44],
@@ -25,6 +27,13 @@
     const ancho = Math.round(originalW * escalaCases);
     const alto = Math.round(originalH * escalaCases);
     return {tipo, x, y: plantaBaixaY - alto, ancho, alto};
+  }
+
+  // La copa queda per damunt del visor. Només entra la vora de les fulles.
+  function arbre(centre, base, alto) {
+    const [, , , ampleOriginal, altOriginal] = recortes.arbre;
+    const ancho = Math.round(alto * ampleOriginal / altOriginal);
+    return {tipo: 'arbre', x: centre - Math.round(ancho / 2), y: base - alto, ancho, alto};
   }
 
   const darreraCasa = casa('balcons', 675);
@@ -63,7 +72,7 @@
     ctx.fillRect(fons - 14, 245, 28, 1);
   }
 
-  // Coordenades interiors de les dos portes en el JPEG aprovat. Els
+  // Coordenades interiors de les dos portes en la il·lustració. Els
   // moviments es resolen dins de cada portal, amb la seua pròpia fase.
   const entrades = [
     {esquerra: 236, dreta: 286, sostre: 160, fase: 0, colors: ['#f65cfc', '#aa75ff'],
@@ -72,11 +81,33 @@
       grups: [[500, 20], [520, 20], [540, 26]]}
   ];
 
+  // El moviment acaba a la cintura, per ancorar els peus i deixar les
+  // cordes de seguretat, el sòcol i els rètols fora de l'animació.
+  const gentDeFora = [
+    {x: 126, y: 174, ample: 58, base: 214, pas: 3, ritme: 2.2, fase: 0.3},
+    {x: 355, y: 173, ample: 34, base: 214, pas: 2, ritme: 2.6, fase: 1.3},
+    {x: 389, y: 172, ample: 36, base: 214, pas: 3, ritme: 1.9, fase: 5.3},
+    {x: 457, y: 164, ample: 35, base: 207, pas: 2, ritme: 1.5, fase: 3.2},
+    {x: 591, y: 167, ample: 33, base: 208, pas: 2, ritme: 1.7, fase: 1.8},
+    {x: 643, y: 173, ample: 26, base: 212, pas: 3, ritme: 2.3, fase: 0.2},
+    {x: 669, y: 174, ample: 31, base: 212, pas: 2, ritme: 1.8, fase: 3.5}
+  ];
+
   function animarLocals(ctx, imatge, x, y, temps, ancho) {
+    for (const persona of gentDeFora) {
+      const esquerra = x + persona.x;
+      if (esquerra + persona.ample <= 0 || esquerra >= ancho) continue;
+
+      const pas = Math.round(persona.pas * Math.sin(temps * persona.ritme + persona.fase));
+      const alt = persona.base - persona.y;
+      ctx.drawImage(imatge, persona.x, persona.y + pas, persona.ample, alt - pas,
+        esquerra, y + persona.y, persona.ample, alt);
+    }
+
     for (const {esquerra, dreta, sostre, fase, colors, grups} of entrades) {
       if (x + dreta <= 0 || x + esquerra >= ancho) continue;
 
-      // Reenquadrem els mateixos balladors del JPEG per moure'ls sense duplicar-los.
+      // Cada portal mou els balladors de la il·lustració amb la seua pròpia fase.
       const cap = 184;
       const alt = 48;
       for (let i = 0; i < grups.length; i++) {
@@ -106,8 +137,7 @@
 
   window.Avenida = Escenario.crear({
     ruta: 'assets/escenarios/mestre-serrano/',
-    laminas: ['horitzo', 'facanes', 'decorats', 'passeig.svg',
-      'locals-go-terrat-escala-1.1h.jpg', 'banc.svg'],
+    laminas: ['horitzo', 'facanes', 'decorats', 'passeig.svg', artLocals, artArbre, 'banc.svg'],
     aceraY: 249,
     recortes,
     capas: [
@@ -125,17 +155,17 @@
         {tipo: 'fanal', x: 32, y: 114},
         {tipo: 'parada', x: 174, y: 119},
         {tipo: 'banc', x: 443, y: 204, ancho: 142, alto: 72},
-        {tipo: 'arbre', x: 603, y: 119, ancho: 151, alto: 155},
+        arbre(683, 274, 365),
         {tipo: 'fanal', x: 771, y: 111},
         {tipo: 'banc', x: 821, y: 209, ancho: 140, alto: 72},
-        {tipo: 'arbre', x: 977, y: 141, ancho: 128, alto: 132},
+        arbre(1043, 273, 380),
         {tipo: 'banc', x: 1140, y: 209, ancho: 144, alto: 74},
         {tipo: 'fanal', x: 1320, y: 111},
         {tipo: 'banc', x: 1400, y: 206, ancho: 142, alto: 72},
         {tipo: 'banc', x: 1570, y: 203, ancho: 140, alto: 73},
         {tipo: 'fanal', x: 1850, y: 115},
         {tipo: 'banc', x: 2010, y: 230, ancho: 140, alto: 71},
-        {tipo: 'arbre', x: 2168, y: 143, ancho: 126, alto: 130},
+        arbre(2224, 273, 365),
         {tipo: 'banc', x: 2310, y: 228, ancho: 133, alto: 68},
         {tipo: 'fanal', x: 2470, y: 112},
         {tipo: 'sales', x: 2521, y: 181}

@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const imagenes = [];
+const locals = 'locals-go-terrat-sense-arbres.png';
+const arbre = 'arbre-alt-passeig.png';
 class Arte {
   set src(ruta) {
     const bytes = fs.readFileSync(ruta);
@@ -11,13 +13,6 @@ class Arte {
       assert.equal(bytes.toString('ascii', 1, 4), 'PNG');
       this.naturalWidth = bytes.readUInt32BE(16);
       this.naturalHeight = bytes.readUInt32BE(20);
-    } else if (archivo.endsWith('.jpg')) {
-      assert.equal(bytes.readUInt16BE(0), 0xffd8, 'JPEG vàlid');
-      const sof = Math.max(bytes.indexOf(Buffer.from([0xff, 0xc0])),
-        bytes.indexOf(Buffer.from([0xff, 0xc2])));
-      assert(sof > 0, 'JPEG amb marcador SOF0 o SOF2');
-      this.naturalHeight = bytes.readUInt16BE(sof + 5);
-      this.naturalWidth = bytes.readUInt16BE(sof + 7);
     } else {
       const svg = bytes.toString('utf8');
       assert.match(svg, /<svg xmlns="http:\/\/www.w3.org\/2000\/svg"/);
@@ -36,7 +31,7 @@ for (const ruta of ['src/escenario.js', 'src/avenida.js'])
 
 const ancho = 900, alto = 480;
 let sueloHasta, cieloHasta, llamadas, localesEnCuadro, bancosEnCuadro;
-let edificios, animaciones, haces;
+let edificios, animaciones, gentDeFora, haces;
 let localesAlInicio = null, localesAlAvanzar = false, maxLlamadas = 0;
 let camaraActual = 0;
 const casesAlPrincipi = [];
@@ -62,7 +57,13 @@ const ctx = {
     assert(sx >= 0 && sy >= 0 && sw > 0 && sh > 0);
     assert(sx + sw <= img.naturalWidth && sy + sh <= img.naturalHeight);
     assert([x, y, w, h].every(Number.isInteger));
-    if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg' && sw < 1020) {
+    if (img.nombre === locals && sw < 1020 && y < 184) {
+      assert(x < ancho && x + w > 0, 'només s’anima el públic exterior visible');
+      assert(sy + sh === y + h && y + h <= 214, 'la cintura queda ancorada');
+      gentDeFora.push([sx, sy]);
+      return;
+    }
+    if (img.nombre === locals && sw < 1020) {
       assert(sy >= 182 && sy + sh === 232 && y === 184);
       assert((sx >= 236 && sx + sw <= 286) || (sx >= 499 && sx + sw <= 567),
         'ball només a l’interior de cada porta');
@@ -79,7 +80,7 @@ const ctx = {
       assert(x <= 0 && y <= 0);
       cieloHasta = x + w;
     }
-    if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg') {
+    if (img.nombre === locals) {
       localesEnCuadro++;
       assert.equal(y, 0, 'la fachada queda alineada con los edificios');
       edificios.push([x, x + w]);
@@ -94,12 +95,18 @@ const ctx = {
       edificios.push([x, x + w]);
       if (camaraActual === 0) casesAlPrincipi.push([x, x + w]);
     }
-    if (img.nombre === 'locals-go-terrat-escala-1.1h.jpg') {
+    if (img.nombre === locals) {
       assert.equal(w, 1020, "l'art conceptual dels locals continua a la mida validada");
       assert.equal(h, 250);
     }
+    if (img.nombre === arbre) {
+      assert(y <= -85 && y + h >= 270 && y + h <= 275, 'copa tallada i base a la vorera');
+      assert(Math.abs(w / sw - h / sh) < 0.01, 'arbre sense deformacions');
+      // El rectangle transparent de la copa és més ample que la base.
+      mobiliario.set(x + camaraActual + Math.round(w / 4), {tipo: 'arbre', ancho: Math.round(w / 2)});
+    }
     const tipo = img.nombre === 'banc.svg' ? 'banc' :
-      img.nombre === 'decorats.png' && sy === 0 ? {0: 'arbre', 342: 'fanal'}[sx] :
+      img.nombre === 'decorats.png' && sx === 342 ? 'fanal' :
       img.nombre === 'decorats.png' && sy === 221 ? 'sales' : undefined;
     if (tipo === 'banc') bancosEnCuadro++;
     if (tipo) mobiliario.set(x + camaraActual, {tipo, ancho: w});
@@ -110,6 +117,7 @@ for (let camara = 0; camara <= 1780; camara++) {
   sueloHasta = cieloHasta = llamadas = localesEnCuadro = bancosEnCuadro = 0;
   edificios = [];
   animaciones = [];
+  gentDeFora = [];
   haces = 0;
   mundo.Avenida.dibujar(ctx, camara, camara / 60);
   assert(sueloHasta >= ancho && cieloHasta >= ancho, 'cobertura de extremo a extremo');
@@ -119,20 +127,25 @@ for (let camara = 0; camara <= 1780; camara++) {
   }
   assert.equal(animaciones.length * 2, haces * 3);
   assert(haces <= 4 && animaciones.length <= 6);
+  assert(gentDeFora.length <= 7);
   if (camara === 0) {
     localesAlInicio = localesEnCuadro;
     assert(bancosEnCuadro > 0, 'los bancos ya acompañan el paseo inicial');
   }
   if (camara >= 1100 && localesEnCuadro > 0) localesAlAvanzar = true;
-  if (camara === 1400) {
+  if (camara === 1660) {
     assert.equal(animaciones.length, 6, 'els dos públics ballen');
+    assert.equal(gentDeFora.length, 7, 'els grups de fora i els porters s’animen');
     const primerPas = animaciones;
+    const gentPrimerPas = gentDeFora;
     animaciones = [];
+    gentDeFora = [];
     haces = llamadas = 0;
     mundo.Avenida.dibujar(ctx, camara, 0);
     for (const inicio of [0, 3]) {
       assert.notDeepEqual(animaciones.slice(inicio, inicio + 3), primerPas.slice(inicio, inicio + 3));
     }
+    assert.notDeepEqual(gentDeFora, gentPrimerPas);
   }
   maxLlamadas = Math.max(llamadas, maxLlamadas);
 }
@@ -141,26 +154,23 @@ assert(casesAlPrincipi[0][1] + 50 < casesAlPrincipi[1][0],
   'es manté una obertura cap a l horitzó entre les façanes');
 assert.equal(localesAlInicio, 0, 'GO! y El Terrat no se ven desde el comienzo');
 assert(localesAlAvanzar, 'GO! y El Terrat aparecen al avanzar lateralmente');
-assert(maxLlamadas <= 20, 'el decorat manté un nombre acotat de blits per fotograma');
+assert(maxLlamadas <= 27, 'el decorat manté un nombre acotat de blits per fotograma');
 assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'banc').length, 7);
 assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'fanal').length, 5);
+assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'arbre').length, 3);
 const piezas = [...mobiliario].sort(([a], [b]) => a - b);
 for (let i = 1; i < piezas.length; i++) {
   const [x, pieza] = piezas[i - 1];
   assert(piezas[i][0] - (x + pieza.ancho) >= 12,
     `espai entre ${pieza.tipo} x=${x} i ${piezas[i][1].tipo} x=${piezas[i][0]}`);
 }
-assert.equal(imagenes.length, 6, 'las seis láminas se cargan una sola vez');
+assert.equal(imagenes.length, 7, 'las siete láminas se cargan una sola vez');
 assert(!imagenes.some(i => i.nombre === 'paviment.png'),
   'la calle asfaltada anterior deja de utilizarse');
 const suelo = fs.readFileSync('assets/escenarios/mestre-serrano/passeig.svg', 'utf8');
 assert(!/blur|feGaussianBlur|filter=/.test(suelo), 'juntas nítidas, sin difuminados');
 assert.match(suelo, /width="600" height="231"/, 'módulo del suelo de ancho exacto');
-// Art aprovat: ara es reprodueixen els píxels de la il·lustració, no formes SVG.
-const art = fs.readFileSync('assets/escenarios/mestre-serrano/locals-go-terrat-escala-1.1h.jpg');
-assert.equal(art.readUInt16BE(0), 0xffd8, 'asset JPEG real');
-assert(art.length > 40000, 'el bocet reescalat no és una icona plana ni un substitut de baixa resolució');
-const imatge = imagenes.find(img => img.nombre === 'locals-go-terrat-escala-1.1h.jpg');
+const imatge = imagenes.find(img => img.nombre === locals);
 assert.equal(imatge.naturalWidth, 1020, 'amplada validada del fons del tram');
 assert.equal(imatge.naturalHeight, 250, 'alçada validada del fons del tram');
 const avenida = fs.readFileSync('src/avenida.js', 'utf8');
@@ -169,4 +179,4 @@ for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1j: paseo continuo en 1.781 cámaras, travesera, mobiliario separado y dos entradas animadas. Blits máximos por cuadro:', maxLlamadas);
+console.log('Escenario 1.1k: paseo continuo en 1.781 cámaras, árboles altos, mobiliario separado y público animado. Blits máximos por cuadro:', maxLlamadas);
