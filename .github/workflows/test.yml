@@ -34,7 +34,8 @@ jobs:
     container:
       # Mantener la versión de la imagen alineada con Playwright en package.json.
       image: mcr.microsoft.com/playwright:v1.62.1-noble
-      options: --init --ipc=host
+      # El UID del runner es propietario de los directorios que monta Actions.
+      options: --user 1001 --init --ipc=host
     steps:
       - uses: actions/checkout@v7
         with:
