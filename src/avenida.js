@@ -1,4 +1,4 @@
-// Acte 1.1k · Passeig de Mestre Serrano.
+// Acte 1.1l · Passeig de Mestre Serrano.
 (() => {
   'use strict';
 
@@ -37,40 +37,9 @@
   }
 
   const darreraCasa = casa('balcons', 675);
-  const travesseraX = darreraCasa.x + darreraCasa.ancho;
+  // Entre els últims balcons i els locals deixem el fons real a la vista.
+  // Sense cap carrer artificial: la separació ja suggereix la travessera.
   const localsX = 1450;
-
-  function pintarTravessera(ctx, offset, ancho) {
-    const esquerra = travesseraX - offset;
-    const dreta = localsX - offset;
-    if (dreta <= 0 || esquerra >= ancho) return;
-
-    const fons = esquerra + 46;
-    ctx.fillStyle = '#625c65';
-    ctx.beginPath();
-    ctx.moveTo(fons - 9, 223);
-    ctx.lineTo(fons + 9, 223);
-    ctx.lineTo(dreta, plantaBaixaY);
-    ctx.lineTo(esquerra, plantaBaixaY);
-    ctx.fill();
-
-    ctx.fillStyle = '#a08e86';
-    ctx.beginPath();
-    ctx.moveTo(fons - 9, 223);
-    ctx.lineTo(fons - 6, 223);
-    ctx.lineTo(esquerra + 13, plantaBaixaY);
-    ctx.lineTo(esquerra, plantaBaixaY);
-    ctx.moveTo(fons + 6, 223);
-    ctx.lineTo(fons + 9, 223);
-    ctx.lineTo(dreta, plantaBaixaY);
-    ctx.lineTo(dreta - 11, plantaBaixaY);
-    ctx.fill();
-
-    ctx.fillStyle = '#827478';
-    ctx.fillRect(fons - 3, 229, 6, 1);
-    ctx.fillRect(fons - 7, 236, 14, 1);
-    ctx.fillRect(fons - 14, 245, 28, 1);
-  }
 
   // Coordenades interiors de les dos portes en la il·lustració. Els
   // moviments es resolen dins de cada portal, amb la seua pròpia fase.
@@ -81,28 +50,76 @@
       grups: [[500, 20], [520, 20], [540, 26]]}
   ];
 
-  // El moviment acaba a la cintura, per ancorar els peus i deixar les
-  // cordes de seguretat, el sòcol i els rètols fora de l'animació.
-  const gentDeFora = [
-    {x: 126, y: 174, ample: 58, base: 214, pas: 3, ritme: 2.2, fase: 0.3},
-    {x: 355, y: 173, ample: 34, base: 214, pas: 2, ritme: 2.6, fase: 1.3},
-    {x: 389, y: 172, ample: 36, base: 214, pas: 3, ritme: 1.9, fase: 5.3},
-    {x: 457, y: 164, ample: 35, base: 207, pas: 2, ritme: 1.5, fase: 3.2},
-    {x: 591, y: 167, ample: 33, base: 208, pas: 2, ritme: 1.7, fase: 1.8},
-    {x: 643, y: 173, ample: 26, base: 212, pas: 3, ritme: 2.3, fase: 0.2},
-    {x: 669, y: 174, ample: 31, base: 212, pas: 2, ritme: 1.8, fase: 3.5}
+  // No fem oscil·lar franges senceres de paret. L'art original ja
+  // conté el públic i el mantenim intacte: animem només el cap i alguns
+  // gestos del tors, amb els peus i les vores del fons sempre estables.
+  // Cada figurant té un ritme i una pausa independents.
+  const figurants = [
+    {x: 132, y: 179, ample: 21, base: 214, fase: 0.1, periode: 5.8, gest: 'conversa'},
+    {x: 160, y: 180, ample: 23, base: 214, fase: 0.7, periode: 6.4, gest: 'conversa'},
+    {x: 359, y: 177, ample: 18, base: 214, fase: 0.3, periode: 5.6, gest: 'conversa'},
+    {x: 378, y: 177, ample: 18, base: 214, fase: 0.9, periode: 6.6, gest: 'conversa'},
+    {x: 398, y: 175, ample: 24, base: 214, fase: 0.4, periode: 7.2, gest: 'espera'},
+    {x: 465, y: 164, ample: 25, base: 207, fase: 0.8, periode: 8.0, gest: 'porter'},
+    {x: 597, y: 168, ample: 25, base: 208, fase: 0.2, periode: 8.7, gest: 'porter'},
+    {x: 646, y: 176, ample: 20, base: 212, fase: 0.6, periode: 5.2, gest: 'conversa'},
+    {x: 669, y: 174, ample: 13, base: 212, fase: 0.1, periode: 6.1, gest: 'espera'},
+    {x: 682, y: 175, ample: 17, base: 212, fase: 0.9, periode: 5.9, gest: 'conversa'}
   ];
 
-  function animarLocals(ctx, imatge, x, y, temps, ancho) {
-    for (const persona of gentDeFora) {
-      const esquerra = x + persona.x;
-      if (esquerra + persona.ample <= 0 || esquerra >= ancho) continue;
+  // Una conversa consta de pauses llargues i un gest curt i arrodonit.
+  // Les fases diferents impedeixen que tot el públic es moga a l'uníson.
+  function gestPausat(temps, figurant) {
+    const cicle = ((temps / figurant.periode + figurant.fase) % 1 + 1) % 1;
+    if (cicle < 0.63) return 0;
+    const progres = (cicle - 0.63) / 0.37;
+    return Math.sin(Math.PI * progres) ** 2;
+  }
 
-      const pas = Math.round(persona.pas * Math.sin(temps * persona.ritme + persona.fase));
-      const alt = persona.base - persona.y;
-      ctx.drawImage(imatge, persona.x, persona.y + pas, persona.ample, alt - pas,
-        esquerra, y + persona.y, persona.ample, alt);
+  function animarFigurants(ctx, imatge, x, y, temps, ancho) {
+    for (const figurant of figurants) {
+      const esquerra = x + figurant.x;
+      if (esquerra + figurant.ample <= 0 || esquerra >= ancho) continue;
+      const alt = figurant.base - figurant.y;
+      const capAlt = figurant.gest === 'porter' ? 13 : 12;
+      const gest = gestPausat(temps, figurant);
+      const respirar = Math.sin(temps * 0.85 + figurant.fase * 6.28);
+      const mirada = Math.sin(temps * 0.47 + figurant.fase * 11);
+      const moureCap = Math.round(
+        (figurant.gest === 'porter' ? 1.1 : 1.45) * mirada + gest * 0.8);
+      const assentir = Math.round(gest * (figurant.gest === 'porter' ? 1 : 2));
+      const moureCos = Math.round(
+        (figurant.gest === 'conversa' ? 1.4 : 0.65) * gest + respirar * 0.35);
+
+      // Retalls localitzats i retallats a les seues pròpies caixes:
+      // la façana, les portes i el paviment no es desplacen mai.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(esquerra + 1, y + figurant.y, figurant.ample - 2, capAlt);
+      ctx.clip();
+      ctx.drawImage(imatge, figurant.x, figurant.y,
+        figurant.ample, capAlt, esquerra + moureCap,
+        y + figurant.y + assentir, figurant.ample, capAlt);
+      ctx.restore();
+
+      // Un moviment ocasional de braços i espatles; cames i peus fixos.
+      // Els porters es limiten a mirar de costat i respirar.
+      if (figurant.gest === 'conversa') {
+        const torsY = figurant.y + capAlt;
+        const torsAlt = Math.min(12, alt - capAlt - 8);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(esquerra + 2, y + torsY, figurant.ample - 4, torsAlt);
+        ctx.clip();
+        ctx.drawImage(imatge, figurant.x, torsY, figurant.ample, torsAlt,
+          esquerra + moureCos, y + torsY, figurant.ample, torsAlt);
+        ctx.restore();
+      }
     }
+  }
+
+  function animarLocals(ctx, imatge, x, y, temps, ancho) {
+    animarFigurants(ctx, imatge, x, y, temps, ancho);
 
     for (const {esquerra, dreta, sostre, fase, colors, grups} of entrades) {
       if (x + dreta <= 0 || x + esquerra >= ancho) continue;
@@ -142,7 +159,7 @@
     recortes,
     capas: [
       {factor: 0.11, piezas: [{tipo: 'cel', x: 0, y: -8}]},
-      {factor: 0.76, fondo: pintarTravessera, piezas: [
+      {factor: 0.76, piezas: [
         casa('cases', -265),
         darreraCasa,
         {tipo: 'locals', x: localsX, y: 0, animar: animarLocals}
