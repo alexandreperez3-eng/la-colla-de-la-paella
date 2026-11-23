@@ -40,7 +40,7 @@ La base ya tenía 26 archivos de pruebas Node para lógica, sprites y escenario.
 | Chromium táctil | Dos contactos simultáneos mediante CDP: mantener dirección, atacar y soltar el movimiento al cancelar. |
 | Canvas en Chromium, Firefox, WebKit y perfil iPad | Carga de capas reales. Compara píxeles en dos instantes fijos para detectar animación ausente y movimiento fuera de los portales y figurantes. Compara el hueco entre fachadas con el horizonte del mismo render. Adjunta capturas al informe. |
 
-GitHub Actions ejecuta las pruebas Node y las de navegador en cada PR y cada push a `main`. Los jobs solo requieren lectura del repositorio. El job de navegador publica `informe-playwright` durante siete días con las capturas y, cuando hay fallos, trazas. Usa runners estándar del repositorio público.
+GitHub Actions ejecuta las pruebas Node y las de navegador en cada PR y cada push a `main`. Los jobs solo requieren lectura del repositorio. El job de navegador publica `informe-playwright` durante siete días con las capturas y, cuando hay fallos, trazas. Usa runners estándar del repositorio público y la imagen oficial de Playwright con los tres motores preinstalados. Al actualizar Playwright, actualiza a la vez la etiqueta de la imagen en `.github/workflows/test.yml`.
 
 La comprobación visual compara regiones en el mismo motor, donde desaparecen las diferencias de antialiasing entre navegadores. Sirve para verificar propiedades concretas del escenario. La revisión artística de composición y animación sigue siendo manual. WebKit en Linux con perfil de iPad emula pantalla y tacto. La latencia, los gestos del sistema, el rendimiento y la ergonomía a dos pulgares se verifican en un iPad físico.
 
