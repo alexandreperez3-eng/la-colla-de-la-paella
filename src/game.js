@@ -430,7 +430,7 @@
     ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
   }
   function background(){
-    Avenida.dibujar(ctx,Math.round(game.mission.camara));
+    Avenida.dibujar(ctx,Math.round(game.mission.camara),game.elapsed);
   }
   // Una vora prima conserva el contrast de les etiquetes sobre persianes i tendals.
   function rotulo(texto, x, y, borde) {

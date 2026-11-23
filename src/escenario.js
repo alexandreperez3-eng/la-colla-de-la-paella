@@ -10,7 +10,7 @@
       imagenes[nombre] = imagen;
     }
 
-    function dibujar(ctx, camara) {
+    function dibujar(ctx, camara, tiempo = 0) {
       const ancho = ctx.canvas.width;
       const alto = ctx.canvas.height;
       ctx.imageSmoothingEnabled = false;
@@ -23,6 +23,7 @@
 
       for (const capa of capas) {
         const offset = Math.round(camara * capa.factor);
+        capa.fondo?.(ctx, offset, ancho);
         for (const pieza of capa.piezas) {
           const [lamina, sx, sy, sw, sh] = recortes[pieza.tipo];
           const img = imagenes[lamina];
@@ -34,6 +35,7 @@
           if (x + w <= 0 || x >= ancho) continue;
           do {
             ctx.drawImage(img, sx, sy, sw, sh, x, pieza.y, w, h);
+            pieza.animar?.(ctx, img, x, pieza.y, tiempo, ancho);
             x += w;
           } while (pieza.repetir && x < ancho);
         }
