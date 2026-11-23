@@ -40,6 +40,7 @@ const ctx = {
   canvas: {width: ancho, height: alto},
   fillRect() {},
   rect() {},
+  clip() {},
   beginPath() {},
   moveTo() {},
   lineTo() {},
