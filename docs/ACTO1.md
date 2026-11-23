@@ -50,4 +50,4 @@ Las cuatro ilustraciones generadas para esta misión se recuperaron de la sesió
 | --- | --- | --- |
 | ![Parada de paella al inicio](mestre-serrano/festa.webp) | ![Combate contra tres Pèsols junto a la placa](mestre-serrano/combat.webp) | ![Llaurador y señal hacia Sales](mestre-serrano/cap-a-sales.webp) |
 
-Las capturas proceden del bucle real de juego en Canvas 2D. La comprobación WebKit en CI carga los cuatro PNG, pulsa los controles, entra en combate, verifica la posición del Canvas y la botonera y prueba el reinicio. La fluidez y el tacto con dos pulgares quedan para la revisión física.
+Las capturas proceden del bucle real de juego en Canvas 2D. La [suite de navegador](desarrollo.md) comprueba las láminas actuales y las animaciones de Mestre Serrano, el combate, la posición del Canvas y la botonera y el reinicio. La fluidez y el tacto con dos pulgares quedan para la revisión física.

@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -14,6 +18,8 @@ jobs:
     steps:
       - name: Obtener el código
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Preparar Node.js
         uses: actions/setup-node@v7
         with:
@@ -22,20 +28,26 @@ jobs:
       - name: Comprobar lógica y sprites
         run: npm test
 
-  escenario-webkit:
+  navegador:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          package-manager-cache: false
-      - name: Preparar WebKit para la prueba táctil
-        run: |
-          npm install --prefix "$RUNNER_TEMP/navegador" playwright@1.62.1 --no-package-lock
-          "$RUNNER_TEMP/navegador/node_modules/.bin/playwright" install --with-deps webkit
-      - name: Probar la avenida con el perfil de iPad
-        run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 &
-          NODE_PATH="$RUNNER_TEMP/navegador/node_modules" node tests/escenario-webkit.cjs
+          cache: npm
+      - name: Instalar dependencias bloqueadas
+        run: npm ci
+      - name: Instalar navegadores
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Ejecutar la suite de navegador
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: informe-playwright
+          path: playwright-report/
+          retention-days: 7

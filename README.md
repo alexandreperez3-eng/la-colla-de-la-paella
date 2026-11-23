@@ -1,6 +1,10 @@
 # La Colla de la Paella 🥘
 
-**Paso 03E — Combo jugable de cuatro movimientos (versión provisional).**
+**Acte 1.1l · Avinguda Mestre Serrano**
+
+Con Node.js 24 y Python 3, ejecuta `npm start` y abre <http://127.0.0.1:4173>. Usa `npm test` para lógica y sprites. La instalación y ejecución de la suite de navegador están en la [guía de desarrollo](docs/desarrollo.md). Consulta [Acto 1](docs/ACTO1.md) para el recorrido y [AGENTS.md](AGENTS.md) para trabajar en el repositorio.
+
+## Historial del prototipo · Paso 03E
 
 ## Nuevo combo del Llaurador
 
