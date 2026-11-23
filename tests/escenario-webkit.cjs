@@ -40,6 +40,37 @@ async function main() {
       return window.laminasDibujadas.has('locals-go-terrat-escala-1.1h.jpg');
     });
 
+    const canvi = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 900;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d', {willReadFrequently: true});
+      const camara = 1660;
+      const localsX = 1450 - Math.round(camara * 0.76);
+      const imatge = temps => {
+        window.Avenida.dibujar(ctx, camara, temps);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      };
+      const abans = imatge(0);
+      const despres = imatge(0.31);
+      const pixels = {terrat: 0, go: 0, fora: 0};
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4;
+          if (abans[i] === despres[i] && abans[i + 1] === despres[i + 1] &&
+            abans[i + 2] === despres[i + 2]) continue;
+          const dins = y >= 155 && y < 232;
+          const localX = x - localsX;
+          if (dins && localX >= 236 && localX < 286) pixels.terrat++;
+          else if (dins && localX >= 499 && localX < 567) pixels.go++;
+          else pixels.fora++;
+        }
+      }
+      return pixels;
+    });
+    assert(canvi.terrat > 100 && canvi.go > 100, 'els dos interiors canvien amb el temps');
+    assert.equal(canvi.fora, 0, 'els rètols, la façana i el paviment són estables');
+
     const geometria = () => page.evaluate(() =>
       ['header', '#game', '.pad', '#attack', '#special'].map(selector => {
         const {x, y, width, height} = document.querySelector(selector).getBoundingClientRect();
@@ -67,7 +98,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#coordinates').textContent === 'Posición: 120, 365');
     assert.equal(await page.locator('#objective').textContent(), 'Persegueix els lladres');
     assert.deepEqual(errors, []);
-    console.log('WebKit en iPad emulado: arte PNG/SVG de paseo dibujado, controles táctiles, combate, cabecera estable y reinicio.');
+    console.log('WebKit en iPad emulado: paseo e interiores animados, controles táctiles, combate, cabecera estable y reinicio.');
   } finally {
     await browser.close();
   }
