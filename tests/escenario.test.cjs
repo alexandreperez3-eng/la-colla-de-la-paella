@@ -39,6 +39,7 @@ const mobiliario = new Map();
 const ctx = {
   canvas: {width: ancho, height: alto},
   fillRect() {},
+  rect() {},
   beginPath() {},
   moveTo() {},
   lineTo() {},
@@ -46,10 +47,9 @@ const ctx = {
   save() {},
   restore() {},
   fill() {
-    if (this.fillStyle !== '#625c65' && this.fillStyle !== '#a08e86') {
-      assert(this.globalAlpha > 0 && this.globalAlpha < 0.2, 'llums sense flaixos opacs');
-      haces++;
-    }
+    assert(this.globalAlpha > 0 && this.globalAlpha < 0.2,
+      'només es pinten els focus suaus; cap carrer superposat al fons');
+    haces++;
   },
   drawImage(img, sx, sy, sw, sh, x, y, w, h) {
     llamadas++;
@@ -57,17 +57,24 @@ const ctx = {
     assert(sx >= 0 && sy >= 0 && sw > 0 && sh > 0);
     assert(sx + sw <= img.naturalWidth && sy + sh <= img.naturalHeight);
     assert([x, y, w, h].every(Number.isInteger));
-    if (img.nombre === locals && sw < 1020 && y < 184) {
-      assert(x < ancho && x + w > 0, 'només s’anima el públic exterior visible');
-      assert(sy + sh === y + h && y + h <= 214, 'la cintura queda ancorada');
-      gentDeFora.push([sx, sy]);
-      return;
-    }
     if (img.nombre === locals && sw < 1020) {
-      assert(sy >= 182 && sy + sh === 232 && y === 184);
-      assert((sx >= 236 && sx + sw <= 286) || (sx >= 499 && sx + sw <= 567),
-        'ball només a l’interior de cada porta');
-      animaciones.push([sx, sy]);
+      const dins = ((sx >= 236 && sx + sw <= 286) || (sx >= 499 && sx + sw <= 567)) && sy >= 182;
+      if (dins) {
+        assert(sy + sh === 232 && y === 184,
+          'ball limitat al portal original');
+        animaciones.push([sx, sy]);
+        return;
+      }
+      assert((sx >= 126 && sx + sw <= 184) ||
+        (sx >= 355 && sx + sw <= 425) ||
+        (sx >= 457 && sx + sw <= 492) ||
+        (sx >= 591 && sx + sw <= 624) ||
+        (sx >= 643 && sx + sw <= 700), 'figurants dins dels seus grups originals');
+      assert(sy >= 164 && sy + sh <= 214 && y >= 164 && y + h <= 214,
+        'caps i gestos limitats al públic exterior; sense moure els peus');
+      assert.equal(w, sw, 'no s estira cap figura horitzontalment');
+      assert.equal(h, sh, 'no s estira cap figura verticalment');
+      gentDeFora.push([sx, sy, x, y]);
       return;
     }
     assert(x < ancho && x + w > 0, 'solo se dibuja arte dentro del visor');
@@ -127,7 +134,7 @@ for (let camara = 0; camara <= 1780; camara++) {
   }
   assert.equal(animaciones.length * 2, haces * 3);
   assert(haces <= 4 && animaciones.length <= 6);
-  assert(gentDeFora.length <= 7);
+  assert(gentDeFora.length <= 16, '10 caps i 6 gestos de conversa com a màxim');
   if (camara === 0) {
     localesAlInicio = localesEnCuadro;
     assert(bancosEnCuadro > 0, 'los bancos ya acompañan el paseo inicial');
@@ -135,13 +142,13 @@ for (let camara = 0; camara <= 1780; camara++) {
   if (camara >= 1100 && localesEnCuadro > 0) localesAlAvanzar = true;
   if (camara === 1660) {
     assert.equal(animaciones.length, 6, 'els dos públics ballen');
-    assert.equal(gentDeFora.length, 7, 'els grups de fora i els porters s’animen');
+    assert.equal(gentDeFora.length, 16, '10 figures amb moviments independents i 6 gestos de conversa');
     const primerPas = animaciones;
     const gentPrimerPas = gentDeFora;
     animaciones = [];
     gentDeFora = [];
     haces = llamadas = 0;
-    mundo.Avenida.dibujar(ctx, camara, 0);
+    mundo.Avenida.dibujar(ctx, camara, 2.1);
     for (const inicio of [0, 3]) {
       assert.notDeepEqual(animaciones.slice(inicio, inicio + 3), primerPas.slice(inicio, inicio + 3));
     }
@@ -154,7 +161,7 @@ assert(casesAlPrincipi[0][1] + 50 < casesAlPrincipi[1][0],
   'es manté una obertura cap a l horitzó entre les façanes');
 assert.equal(localesAlInicio, 0, 'GO! y El Terrat no se ven desde el comienzo');
 assert(localesAlAvanzar, 'GO! y El Terrat aparecen al avanzar lateralmente');
-assert(maxLlamadas <= 27, 'el decorat manté un nombre acotat de blits per fotograma');
+assert(maxLlamadas <= 40, 'el decorat manté un nombre acotat de blits per fotograma');
 assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'banc').length, 7);
 assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'fanal').length, 5);
 assert.equal([...mobiliario.values()].filter(pieza => pieza.tipo === 'arbre').length, 3);
@@ -175,8 +182,10 @@ assert.equal(imatge.naturalWidth, 1020, 'amplada validada del fons del tram');
 assert.equal(imatge.naturalHeight, 250, 'alçada validada del fons del tram');
 const avenida = fs.readFileSync('src/avenida.js', 'utf8');
 assert(!avenida.includes("tipo: 'placa'"), 'sin cartel callejero innecesario');
+assert(!avenida.includes('pintarTravessera') && !avenida.includes('fondo:'),
+  'el hueco entre edificios enseña el horizonte sin dibujar una travesera');
 for (const imagen of imagenes) {
   imagen.naturalWidth = 0; // Error de red tras completar la petición.
   mundo.Avenida.dibujar(ctx, 1780);
 }
-console.log('Escenario 1.1k: paseo continuo en 1.781 cámaras, árboles altos, mobiliario separado y público animado. Blits máximos por cuadro:', maxLlamadas);
+console.log('Escenario 1.1l: paseo continuo en 1.781 cámaras, árboles altos, mobiliario separado y público animado. Blits máximos por cuadro:', maxLlamadas);
