@@ -26,6 +26,8 @@ test('el teclado mueve al Llaurador, activa el encuentro y permite reiniciar', a
 });
 
 test('cuatro pulsaciones encadenan cuatro golpes y el Remolí entra en recarga', async ({ page }) => {
+  // Avanzar el reloj recorre cientos de cuadros y WebKit puede tardar más de 30 s.
+  test.slow();
   const inicio = new Date('2026-01-01T00:00:00Z');
   await page.clock.install({ time: inicio });
   await page.clock.pauseAt(new Date(+inicio + 1000));
