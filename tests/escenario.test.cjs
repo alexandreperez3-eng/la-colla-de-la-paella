@@ -6,7 +6,8 @@ const imagenes = [];
 const locals = 'locals-go-terrat-sense-arbres.png';
 const arbre = 'arbre-alt-passeig.png';
 class Arte {
-  set src(ruta) {
+  set src(url) {
+    const ruta = url.split('?')[0];
     const bytes = fs.readFileSync(ruta);
     const archivo = ruta.split('/').pop();
     if (archivo.endsWith('.png')) {

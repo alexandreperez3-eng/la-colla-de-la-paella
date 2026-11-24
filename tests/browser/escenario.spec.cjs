@@ -1,12 +1,12 @@
 const { test, expect } = require('./juego.cjs');
 
-test('Mestre Serrano conserva el horizonte y anima solo al público y los portales', async ({ page }, testInfo) => {
+test('Mestre Serrano conserva el horizonte y el pavimento y anima al público', async ({ page }, testInfo) => {
   await page.addInitScript(() => {
     window.laminasEnEscena = new Map();
     const dibujar = CanvasRenderingContext2D.prototype.drawImage;
     CanvasRenderingContext2D.prototype.drawImage = function (imagen, ...args) {
       if (imagen.src?.includes('/escenarios/')) {
-        window.laminasEnEscena.set(imagen.src.split('/').pop(), imagen);
+        window.laminasEnEscena.set(new URL(imagen.src).pathname.split('/').pop(), imagen);
       }
       return dibujar.call(this, imagen, ...args);
     };
@@ -72,7 +72,13 @@ test('Mestre Serrano conserva el horizonte y anima solo al público y los portal
         }
       }
     }
-    return { ...pixels, huecoMuestraHorizonte, captura: canvas.toDataURL('image/png') };
+    // Las juntas interiores se repiten cada 60 px. Un empalme entre módulos de
+    // 600 px debe verse igual que la junta anterior, incluido todo el reflejo.
+    const union = 1800 - camara;
+    const junta = ctx.getImageData(union - 24, 249, 48, 231).data;
+    const juntaAnterior = ctx.getImageData(union - 24 - 60, 249, 48, 231).data;
+    const pavimentoContinuo = junta.every((valor, i) => valor === juntaAnterior[i]);
+    return { ...pixels, huecoMuestraHorizonte, pavimentoContinuo, captura: canvas.toDataURL('image/png') };
   });
 
   await testInfo.attach('GO y El Terrat', {
@@ -86,4 +92,5 @@ test('Mestre Serrano conserva el horizonte y anima solo al público y los portal
     expect(cantidad, `El grupo exterior ${i + 1} se anima`).toBeGreaterThan(20);
   }
   expect(canvi.fixos, 'Las fachadas y el pavimento quedan estables').toBe(0);
+  expect(canvi.pavimentoContinuo, 'El reflejo continúa en la unión del pavimento').toBe(true);
 });

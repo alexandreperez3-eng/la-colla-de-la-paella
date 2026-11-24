@@ -2,6 +2,7 @@
 (() => {
   'use strict';
 
+  const artPasseig = 'passeig.svg?v=m01';
   const artLocals = 'locals-go-terrat-sense-arbres.png';
   const artArbre = 'arbre-alt-passeig.png';
   const recortes = {
@@ -9,7 +10,7 @@
     cases: ['facanes', 0, 220, 650, 202],
     // Tall al límit del portal, abans de l'últim bloc de pisos de l'atles.
     balcons: ['facanes', 0, 0, 510, 220],
-    passeig: ['passeig.svg', 0, 0, 600, 231],
+    passeig: [artPasseig, 0, 0, 600, 231],
     locals: [artLocals, 0, 0, 1020, 250],
     banc: ['banc.svg', 0, 0, 176, 90],
     arbre: [artArbre, 0, 0, 200, 400],
@@ -154,7 +155,7 @@
 
   window.Avenida = Escenario.crear({
     ruta: 'assets/escenarios/mestre-serrano/',
-    laminas: ['horitzo', 'facanes', 'decorats', 'passeig.svg', artLocals, artArbre, 'banc.svg'],
+    laminas: ['horitzo', 'facanes', 'decorats', artPasseig, artLocals, artArbre, 'banc.svg'],
     aceraY: 249,
     recortes,
     capas: [
